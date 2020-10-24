@@ -1,4 +1,3 @@
-from typing import Optional, List
 from time import sleep
 
 from gpiozero import Motor
@@ -16,10 +15,13 @@ buttonExit = "BACK"
 left_speed_control = "LS_Y"
 right_speed_control = "RS_Y"
 
-
 def main():
     left_speed: float = 0
     right_speed: float = 0
+
+    left_motors = Motors([Motor(17, 27), Motor(12, 13)])
+    right_motors = Motors([Motor(23,22),Motor(16,26)])
+    robot = Robot(left_motors, right_motors)
 
     # Wait for a connection
     if not Gamepad.available():
@@ -52,6 +54,8 @@ def main():
                 right_speed = value * -1
             print("Left speed: " + str(left_speed))
             print("Right speed: " + str(right_speed))
+
+            robot.go(left_speed, right_speed)
 
 if __name__ == "__main__":
     main()
