@@ -1,18 +1,100 @@
-from LaneDetector import LaneDetector
-import cv2
-import logging
+from PiVideoCapture import PiVideoCapture
+from Motors import Motors
+from Robot import Robot
+
+from picamera import PiCamera
+from gpiozero import Motor
+
 import numpy as np
+import cv2
 
-def display_lines(frame, lines, line_color=(0, 255, 0), line_width=10):
-    line_image = np.zeros_like(frame)
-    if lines is not None:
-        for line in lines:
-            for x1, y1, x2, y2 in line:
-                cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
-    line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
-    return line_image
+camera = PiCamera()
+camera.resolution = (160, 120)
+camera.framerate = 15
+camera.rotation = 180
 
-logging.basicConfig(level=logging.DEBUG)
-frame = cv2.imread("./test.jpg")
-ld = LaneDetector(debug=True)
-lines = ld.run(frame)
+video_capture = PiVideoCapture(camera)
+
+while True:
+    # Capture the frames
+    frame = video_capture.read()
+
+    # Crop the image
+
+    crop_img = frame[60:120, 0:160]
+
+    # Convert to grayscale
+
+    gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+
+    # Gaussian blur
+
+    blur = cv2.GaussianBlur(gray,(5,5),0)
+
+ 
+
+    # Color thresholding
+
+    _, thresh = cv2.threshold(blur,60,255,cv2.THRESH_BINARY_INV)
+
+ 
+
+    # Find the contours of the frame
+
+    _, contours,hierarchy = cv2.findContours(thresh.copy(), 1, cv2.CHAIN_APPROX_NONE)
+
+ 
+
+    # Find the biggest contour (if detected)
+
+    if len(contours) > 0:
+
+        c = max(contours, key=cv2.contourArea)
+
+        M = cv2.moments(c)
+
+ 
+
+        cx = int(M['m10']/M['m00'])
+
+        cy = int(M['m01']/M['m00'])
+
+ 
+
+        cv2.line(crop_img,(cx,0),(cx,720),(255,0,0),1)
+
+        cv2.line(crop_img,(0,cy),(1280,cy),(255,0,0),1)
+
+ 
+
+        cv2.drawContours(crop_img, contours, -1, (0,255,0), 1)
+
+ 
+
+        if cx >= 120:
+            print("Turn Left!")
+
+ 
+
+        if cx < 120 and cx > 50:
+            print("On Track!")
+
+ 
+
+        if cx <= 50:
+            print("Turn Right")
+    else:
+
+        print("I don't see the line")
+
+ 
+
+    #Display the resulting frame
+
+    cv2.imwrite("image.jpg",crop_img)
+
+    video_capture.clear_buffer()
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+
+        break

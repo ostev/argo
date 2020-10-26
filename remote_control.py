@@ -10,7 +10,7 @@ import Gamepad
 # Gamepad settings
 gamepadType = Controller
 
-buttonExit = "BACK"
+exit_control = "BACK"
 
 left_speed_control = "LS_Y"
 right_speed_control = "RS_Y"
@@ -41,11 +41,12 @@ def main():
         # Determine the type
         if eventType == "BUTTON":
             # Button changed
-            if control == buttonExit:
+            if control == exit_control:
                 # Exit button (event on press)
                 if value:
                     print("=== Exiting ===")
                     break
+            
         elif eventType == "AXIS":
             # Joystick changed
             if control == left_speed_control:
