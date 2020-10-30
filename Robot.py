@@ -1,8 +1,10 @@
 from Motors import Motors
 
 class Robot(object):
-    def __init__(self, left: Motors, right: Motors):
+    def __init__(self, left: Motors, right: Motors, max_speed: float = 1):
         self.left, self.right = left, right
+        self.left.max_speed = max_speed
+        self.right.max_speed = max_speed
 
     def go(self, power_left: float, power_right: float):
         self.left.go(power_left)

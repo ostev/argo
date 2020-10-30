@@ -1,14 +1,19 @@
-from gpiozero import Motor
 from typing import List
+
+from helpers import clamp
+
+from gpiozero import Motor
+
 
 class Motors(object):
     """ Allows you to control a list of motors like a single motor. """
-    def __init__(self, motors: List[Motor]):
+    def __init__(self, motors: List[Motor], max_speed: float = 1):
         self.motors = motors
+        self.max_speed = max_speed
 
     def go(self, value: float = 1):
         for motor in self.motors:
-            motor.value = value
+            motor.value = clamp(value, -self.max_speed, self.max_speed)
 
     def forward(self, power: float = 1):
         if power >= 0 and power <= 1:
