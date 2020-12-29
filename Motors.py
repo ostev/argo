@@ -19,22 +19,26 @@ class Motors(object):
         if power >= 0 and power <= 1:
             self.go(power)
         else:
-            raise ValueError("Power levels below zero are not allowed as inputs to Motors.forward. Supplied power level was: " + str(power))
+            raise ValueError(
+                "Power levels below zero are not allowed as inputs to Motors.forward. Supplied power level was: "
+                + str(power))
 
     def backward(self, power: float = 1):
         if power >= 0 and power <= 1:
             self.go(power * -1)
         else:
-            raise ValueError("Power levels below zero are not allowed as inputs to Motors.backward. Supplied power level was: " + str(power))
+            raise ValueError(
+                "Power levels below zero are not allowed as inputs to Motors.backward. Supplied power level was: "
+                + str(power))
 
     def reverse(self):
         for motor in self.motors:
             motor.reverse()
-    
+
     def stop(self):
         for motor in self.motors:
             motor.stop()
-    
+
     def close(self):
         for motor in self.motors:
             motor.close()

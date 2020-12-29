@@ -18,10 +18,12 @@ import time
 import threading
 import inspect
 
-def available(joystickNumber = 0):
+
+def available(joystickNumber=0):
     """Check if a joystick is connected and ready to use."""
     joystickPath = '/dev/input/js' + str(joystickNumber)
     return os.path.exists(joystickPath)
+
 
 class Gamepad:
     EVENT_CODE_BUTTON = 0x01
@@ -43,7 +45,9 @@ class Gamepad:
             if isinstance(gamepad, Gamepad):
                 self.gamepad = gamepad
             else:
-                raise ValueError('Gamepad update thread was not created with a valid Gamepad object')
+                raise ValueError(
+                    'Gamepad update thread was not created with a valid Gamepad object'
+                )
             self.running = True
 
         def run(self):
@@ -56,7 +60,7 @@ class Gamepad:
                 self.gamepad = None
                 raise
 
-    def __init__(self, joystickNumber = 0):
+    def __init__(self, joystickNumber=0):
         self.joystickNumber = str(joystickNumber)
         self.joystickPath = '/dev/input/js' + self.joystickNumber
         retryCount = 5
@@ -69,7 +73,8 @@ class Gamepad:
                 if retryCount > 0:
                     time.sleep(0.5)
                 else:
-                    raise IOError('Could not open gamepad %s: %s' % (self.joystickNumber, str(e)))
+                    raise IOError('Could not open gamepad %s: %s' %
+                                  (self.joystickNumber, str(e)))
         self.eventSize = struct.calcsize('LhBB')
         self.pressedMap = {}
         self.wasPressedMap = {}
@@ -110,7 +115,8 @@ class Gamepad:
                 rawEvent = self.joystickFile.read(self.eventSize)
             except IOError as e:
                 self.connected = False
-                raise IOError('Gamepad %s disconnected: %s' % (self.joystickNumber, str(e)))
+                raise IOError('Gamepad %s disconnected: %s' %
+                              (self.joystickNumber, str(e)))
             if rawEvent is None:
                 self.connected = False
                 raise IOError('Gamepad %s disconnected' % self.joystickNumber)
@@ -139,29 +145,35 @@ class Gamepad:
             else:
                 axis = str(index)
             position = value / Gamepad.MAX_AXIS
-            return '%010u: Axis %s at %+06.1f %%' % (timestamp, axis, position * 100)
+            return '%010u: Axis %s at %+06.1f %%' % (timestamp, axis,
+                                                     position * 100)
         elif eventType == Gamepad.EVENT_CODE_INIT_BUTTON:
             if index in self.buttonNames:
                 button = self.buttonNames[index]
             else:
                 button = str(index)
             if value == 0:
-                return '%010u: Button %s initially released' % (timestamp, button)
+                return '%010u: Button %s initially released' % (timestamp,
+                                                                button)
             elif value == 1:
-                return '%010u: button %s initially pressed' % (timestamp, button)
+                return '%010u: button %s initially pressed' % (timestamp,
+                                                               button)
             else:
-                return '%010u: button %s initially state %i' % (timestamp, button, value)
+                return '%010u: button %s initially state %i' % (timestamp,
+                                                                button, value)
         elif eventType == Gamepad.EVENT_CODE_INIT_AXIS:
             if index in self.axisNames:
                 axis = self.axisNames[index]
             else:
                 axis = str(index)
             position = value / Gamepad.MAX_AXIS
-            return '%010u: Axis %s initially at %+06.1f %%' % (timestamp, axis, position * 100)
+            return '%010u: Axis %s initially at %+06.1f %%' % (timestamp, axis,
+                                                               position * 100)
         else:
-            return '%010u: Unknown event %u, Index %u, Value %i' % (timestamp, eventType, index, value)
+            return '%010u: Unknown event %u, Index %u, Value %i' % (
+                timestamp, eventType, index, value)
 
-    def getNextEvent(self, skipInit = True):
+    def getNextEvent(self, skipInit=True):
         """Returns the next event from the gamepad.
 
         The return format is:
@@ -285,14 +297,16 @@ class Gamepad:
             self.axisMap[index] = finalValue
             self.movedEventMap[index] = []
 
-    def startBackgroundUpdates(self, waitForReady = True):
+    def startBackgroundUpdates(self, waitForReady=True):
         """Starts a background thread which keeps the gamepad state updated automatically.
         This allows for asynchronous gamepad updates and event callback code.
 
         Do not use with getNextEvent"""
         if self.updateThread is not None:
             if self.updateThread.running:
-                raise RuntimeError('Called startBackgroundUpdates when the update thread is already running')
+                raise RuntimeError(
+                    'Called startBackgroundUpdates when the update thread is already running'
+                )
         self.updateThread = Gamepad.UpdateThread(self)
         self.updateThread.start()
         if waitForReady:
@@ -541,6 +555,7 @@ class Gamepad:
         self.stopBackgroundUpdates()
         del self.joystickFile
 
+
 ###########################
 # Import gamepad mappings #
 ###########################
@@ -550,7 +565,9 @@ exec(open(controllerScript).read())
 
 # Generate a list of available gamepad types
 moduleDict = globals()
-classList = [moduleDict[a] for a in moduleDict.keys() if inspect.isclass(moduleDict[a])]
+classList = [
+    moduleDict[a] for a in moduleDict.keys() if inspect.isclass(moduleDict[a])
+]
 controllerDict = {}
 deviceNames = []
 for gamepad in classList:
@@ -564,10 +581,11 @@ deviceNames.sort()
 
 if __name__ == "__main__":
     # Python 2/3 compatibility
-    try:
-        input = raw_input
-    except NameError:
-        pass
+    # try:
+    #     input = raw_input
+    # except NameError:
+    #     pass
+    # Don't care about that
 
     # ANSI colour code sequences
     GREEN = '\033[0;32m'
@@ -611,6 +629,5 @@ if __name__ == "__main__":
     # Display the event messages as they arrive
     while True:
         eventType, index, value = gamepad.getNextEvent()
-        print(BLUE + eventType + RESET + ',\t  ' +
-              GREEN + str(index) + RESET + ',\t' +
-              CYAN + str(value) + RESET)
+        print(BLUE + eventType + RESET + ',\t  ' + GREEN + str(index) + RESET +
+              ',\t' + CYAN + str(value) + RESET)

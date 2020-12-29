@@ -1,36 +1,28 @@
-from time import sleep
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from web_utils import respond_json
+import time
 
-from flask import Flask, jsonify
-import pickle
-from gpiozero import Motor
+from helpers import switch, GREEN, RESET
 
-from Motors import Motors
-from Robot import Robot
+hostName = "localhost"
+serverPort = 8080
 
-left_speed = 0.0
-right_speed = 0.0
 
-current_op = ""
+class MyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        respond_json(
+            self, switch({lambda _: "default": lambda _: "hello"}, self.path))
 
-status_file = open("current_status.pickle", "wb")
 
-app = Flask(__name__)
+if __name__ == "__main__":
+    webServer = HTTPServer((hostName, serverPort), MyServer)
+    print(GREEN + ("Server started http://%s:%s" % (hostName, serverPort)) +
+          RESET)
 
-def current_status() -> dict:
-    return {
-        "left_speed": left_speed,
-        "right_speed": right_speed,
-        "current_op": current_op
-    }
+    try:
+        webServer.serve_forever()
+    except KeyboardInterrupt:
+        pass
 
-@app.route("/")
-def root():
-    return jsonify(current_status())
-
-@app.route("/left")
-def left():
-    global current_op
-    current_op = "left"
-    status = current_status()
-    pickle.dump(status, status_file, pickle.HIGHEST_PROTOCOL)
-    return jsonify(status)
+    webServer.server_close()
+    print("\n\n" + GREEN + "Server stopped.\n" + RESET)

@@ -3,15 +3,16 @@ from typing import Tuple
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
+
 class PiVideoCapture(object):
     def __init__(self, camera: PiCamera):
         self.camera = camera
         self.rawCapture = PiRGBArray(self.camera)
-    
+
     def read(self, format="bgr"):
         """
         Grab a numpy array of frame data from the camera
-    
+
         Make sure to call `clear_buffer` when you're done.
         """
         self.camera.capture(self.rawCapture, format)
