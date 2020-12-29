@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
         "wfile"
-    ]
+    ],
+    "python.formatting.provider": "black"
 }
