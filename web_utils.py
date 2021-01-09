@@ -14,3 +14,7 @@ def respond_html(handler: BaseHTTPRequestHandler, text: str):
 
 def respond_json(handler: BaseHTTPRequestHandler, text: str):
     respond(handler, text, "application/json")
+
+
+def not_found(handler: BaseHTTPRequestHandler):
+    handler.send_error(404)
