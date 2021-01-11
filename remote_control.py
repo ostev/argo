@@ -35,9 +35,9 @@ def main():
     while gamepad.isConnected():
         # Wait for the next event
         eventType, control, value = gamepad.getNextEvent()
-        print(eventType)
-        print(control)
-        print(value)
+
+
+
         # Determine the type
         if eventType == "BUTTON":
             # Button changed
@@ -53,8 +53,8 @@ def main():
                 left_speed = value * -1
             elif control == right_speed_control:
                 right_speed = value * -1
-            print("Left speed: " + str(left_speed))
-            print("Right speed: " + str(right_speed))
+            # print("Left speed: " + str(left_speed))
+            # print("Right speed: " + str(right_speed))
 
             robot.go(left_speed, right_speed)
 
