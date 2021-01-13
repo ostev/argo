@@ -7,6 +7,7 @@ from Robot import Robot
 from Controller import Controller
 from get_robot import get_robot
 import Gamepad
+from helpers import translate
 
 # Gamepad settings
 gamepadType = Controller
@@ -14,11 +15,12 @@ gamepadType = Controller
 exit_control = "BACK"
 
 left_speed_control = "LS_Y"
-right_speed_control = "RS_Y"
+steering_control = "RS_X"
+
 
 def main():
-    left_speed: float = 0
-    right_speed: float = 0
+    throttle: float = 0
+    steering: float = 0
 
     robot = get_robot()
 
@@ -35,8 +37,6 @@ def main():
         # Wait for the next event
         eventType, control, value = gamepad.getNextEvent()
 
-
-
         # Determine the type
         if eventType == "BUTTON":
             # Button changed
@@ -45,17 +45,17 @@ def main():
                 if value:
                     print("=== Exiting ===")
                     break
-            
+
         elif eventType == "AXIS":
             # Joystick changed
             if control == left_speed_control:
-                left_speed = value * -1
-            elif control == right_speed_control:
-                right_speed = value * -1
+                throttle = value * -1
+            elif control == steering_control:
+                steering = value * -1
             # print("Left speed: " + str(left_speed))
             # print("Right speed: " + str(right_speed))
+            robot.steer(translate(steering * -1, -1, 1, -90, 90), throttle)
 
-            robot.go(left_speed, right_speed)
 
 if __name__ == "__main__":
     main()

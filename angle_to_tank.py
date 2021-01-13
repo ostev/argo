@@ -3,10 +3,10 @@ from helpers import translate
 
 
 def angle_to_tank(angle: int, throttle: float) -> Tuple[float, float]:
-    if angle >= 85:
-        return (1, -1)
-    elif angle <= -85:
-        return (-1, 1)
+    if angle == 90:
+        return (throttle, throttle * -1)
+    elif angle == -90:
+        return (throttle * -1, throttle)
     else:
         translatedSteering = translate(angle, -90, 90, -1, 1)
         left_speed = throttle
