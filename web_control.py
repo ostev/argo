@@ -15,7 +15,7 @@ from helpers import switch, GREEN, CYAN, RESET, default
 hostName = "raspberrypi.local"
 serverPort = 8080
 
-requestRegex = re.compile(r"/set/(speed|angle)/(\d\d?\d?)")
+requestRegex = re.compile(r"/set/(speed|angle)/(-?\d\d?\d?)")
 
 speed: int = 0
 angle: int = 0
@@ -35,6 +35,15 @@ class WebControlHandler(BaseHTTPRequestHandler):
                 """{ "command": "status", "speed": "%s", "angle": "%s" }"""
                 % (speed, angle),
             )
+        elif self.path == "/stop":
+            speed = 0
+            respond_json(
+                self,
+                """{ "command": "stop", "speed": "%s", "angle": "%s" }"""
+                % (speed, angle),
+            )
+            robot.stop()
+            print("\n%sStopped robot.%s" % (CYAN, RESET))
         else:
             match = requestRegex.match(self.path)
             if match != None:
@@ -49,6 +58,7 @@ class WebControlHandler(BaseHTTPRequestHandler):
                             % (speed, angle),
                         )
 
+                        robot.steer(angle, speed / 100)
                     else:
                         not_found(self)
                 elif match.group(1) == "angle":
@@ -61,6 +71,8 @@ class WebControlHandler(BaseHTTPRequestHandler):
                             """{ "command": "set/angle", "speed": "%s", "angle": "%s" }"""
                             % (speed, angle),
                         )
+
+                        robot.steer(angle, speed / 100)
                     else:
                         not_found(self)
                 else:
