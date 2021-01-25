@@ -1,13 +1,12 @@
 from time import sleep
+from statistics import mean
 
 from gpiozero import Motor
 
-from Motors import Motors
-from Robot import Robot
 from Controller import Controller
 from get_robot import get_robot
 import Gamepad
-from helpers import translate
+from helpers import translate, clamp
 
 # Gamepad settings
 gamepadType = Controller
@@ -20,6 +19,7 @@ steering_control = "RS_X"
 
 def main():
     throttle: float = 0
+    previous_throttle: float = 0
     steering: float = 0
 
     robot = get_robot()
@@ -44,17 +44,19 @@ def main():
                 # Exit button (event on press)
                 if value:
                     print("=== Exiting ===")
+                    robot.close()
                     break
 
         elif eventType == "AXIS":
             # Joystick changed
             if control == left_speed_control:
+                previous_throttle = throttle
                 throttle = value * -1
             elif control == steering_control:
-                steering = value * -1
+                steering = translate(value, -1, 1, -0.8, 0.8)
             # print("Left speed: " + str(left_speed))
             # print("Right speed: " + str(right_speed))
-            robot.steer(translate(steering * -1, -1, 1, -90, 90), throttle)
+            robot.run(steering, throttle)
 
 
 if __name__ == "__main__":
