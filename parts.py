@@ -88,7 +88,7 @@ class BrickPiThrottle:
             BrickPiLargeMotor(self.bp.PORT_B, self.bp),
             BrickPiLargeMotor(self.bp.PORT_C, self.bp),
         )
-
+    
     def run(self, throttle: float):
         runPair(self.motors, throttle)
 
@@ -107,7 +107,8 @@ class BrickPiDriver:
 
         self.steering = BrickPiSteering(self.bp.PORT_D, self.bp)
         self.throttle = BrickPiThrottle(self.bp)
-
+    def calibrate(self):
+        self.steering.calibrate()
     def run(self, steering: float, throttle: float):
         self.steering.run(steering)
         self.throttle.run(throttle)

@@ -12,6 +12,7 @@ from helpers import translate, clamp
 gamepadType = Controller
 
 exit_control = "BACK"
+recalibrate_control = "START"
 
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
@@ -19,7 +20,6 @@ steering_control = "RS_X"
 
 def main():
     throttle: float = 0
-    previous_throttle: float = 0
     steering: float = 0
 
     robot = get_robot()
@@ -46,6 +46,10 @@ def main():
                     print("=== Exiting ===")
                     robot.close()
                     break
+            elif control == recalibrate_control:
+                if value:
+                    print("=== Recalibrating ===")
+                    robot.calibrate()
 
         elif eventType == "AXIS":
             # Joystick changed
