@@ -1,7 +1,7 @@
 from typing import Optional
 from time import sleep
 
-from helpers import translate
+from helpers import map_range, CYAN, RESET
 
 from brickpi3 import BrickPi3
 
@@ -63,7 +63,7 @@ class BrickPiSteering(object):
         if angle > 1 or angle < -1:
             return
 
-        self.angle = translate(angle, -1, 1, 0, self.max_angle)
+        self.angle = map_range(angle, -1, 1, 0, self.max_angle)
 
         self.bp.set_motor_position(self.port, self.angle)
 
@@ -88,7 +88,7 @@ class BrickPiThrottle:
             BrickPiLargeMotor(self.bp.PORT_B, self.bp),
             BrickPiLargeMotor(self.bp.PORT_C, self.bp),
         )
-    
+
     def run(self, throttle: float):
         runPair(self.motors, throttle)
 
@@ -105,10 +105,16 @@ class BrickPiDriver:
     def __init__(self):
         self.bp = BrickPi3()
 
+        print("%sInitialising robot...%s" % (CYAN, RESET))
+
         self.steering = BrickPiSteering(self.bp.PORT_D, self.bp)
         self.throttle = BrickPiThrottle(self.bp)
+
+        print("%sReady.%s\n" % (CYAN, RESET))
+
     def calibrate(self):
         self.steering.calibrate()
+
     def run(self, steering: float, throttle: float):
         self.steering.run(steering)
         self.throttle.run(throttle)

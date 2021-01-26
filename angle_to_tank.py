@@ -1,5 +1,5 @@
 from typing import Tuple
-from helpers import translate
+from helpers import map_range
 
 
 def angle_to_tank(angle: int, throttle: float) -> Tuple[float, float]:
@@ -8,7 +8,7 @@ def angle_to_tank(angle: int, throttle: float) -> Tuple[float, float]:
     elif angle == -90:
         return (throttle * -1, throttle)
     else:
-        translatedSteering = translate(angle, -90, 90, -1, 1)
+        translatedSteering = map_range(angle, -90, 90, -1, 1)
         left_speed = throttle
         right_speed = throttle
 

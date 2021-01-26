@@ -28,7 +28,7 @@ def switch(
 default = lambda _: True
 
 
-def translate(value, leftMin, leftMax, rightMin, rightMax):
+def map_range(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
     rightSpan = rightMax - rightMin

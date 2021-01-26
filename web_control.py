@@ -6,11 +6,9 @@ import re
 
 from gpiozero import Motor
 
-from Robot import Robot
-from Motors import Motors
 from get_robot import get_robot
 
-from helpers import switch, GREEN, CYAN, RESET, default
+from helpers import switch, GREEN, CYAN, RESET, default, map_range
 
 hostName = "raspberrypi.local"
 serverPort = 8080
@@ -21,6 +19,11 @@ speed: int = 0
 angle: int = 0
 
 robot = get_robot()
+
+
+def run_angle(robot, angle: int, speed: int):
+    print(speed)
+    robot.run(map_range(angle, -90, 90, -1, 1), speed / 100)
 
 
 class WebControlHandler(BaseHTTPRequestHandler):
@@ -35,6 +38,19 @@ class WebControlHandler(BaseHTTPRequestHandler):
                 """{ "command": "status", "speed": "%s", "angle": "%s" }"""
                 % (speed, angle),
             )
+        elif self.path == "/calibrate":
+            speed = 0
+            angle = 0
+
+            respond_json(
+                self,
+                """{ "command": "calibrate", "speed": "%s", "angle": "%s" }"""
+                % (speed, angle),
+            )
+
+            robot.stop()
+            robot.calibrate()
+
         elif self.path == "/stop":
             speed = 0
             respond_json(
@@ -58,13 +74,13 @@ class WebControlHandler(BaseHTTPRequestHandler):
                             % (speed, angle),
                         )
 
-                        robot.steer(angle, speed / 100)
+                        run_angle(robot, angle, speed)
                     else:
                         not_found(self)
                 elif match.group(1) == "angle":
-                    newAngle = int(match.group(2))
-                    if newAngle >= -90 and newAngle <= 90:
-                        angle = newAngle
+                    new_angle = int(match.group(2))
+                    if new_angle >= -90 and new_angle <= 90:
+                        angle = new_angle
                         print("\n%sSet angle to %s.%s" % (CYAN, angle, RESET))
                         respond_json(
                             self,
@@ -72,7 +88,7 @@ class WebControlHandler(BaseHTTPRequestHandler):
                             % (speed, angle),
                         )
 
-                        robot.steer(angle, speed / 100)
+                        run_angle(robot, angle, speed)
                     else:
                         not_found(self)
                 else:
