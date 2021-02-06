@@ -10,8 +10,8 @@ from get_robot import get_robot
 
 from helpers import switch, GREEN, CYAN, RESET, default, map_range
 
-hostName = "raspberrypi.local"
-serverPort = 8080
+hostName = "192.168.1.111"
+serverPort = 80
 
 requestRegex = re.compile(r"/set/(speed|angle)/(-?\d\d?\d?)")
 
