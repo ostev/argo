@@ -1,0 +1,7 @@
+donkeycar
+opencv-python
+numpy
+picamera
+pandas
+rpi.gpio
+gpiozero

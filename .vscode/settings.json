@@ -3,5 +3,9 @@
         "wfile"
     ],
     "python.formatting.provider": "black",
-    "remote.autoForwardPorts": false
+    "remote.autoForwardPorts": false,
+    "files.watcherExclude": {
+        "**/env/*/**": true
+    },
+    "python.pythonPath": "env/bin/python"
 }
