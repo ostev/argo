@@ -14,7 +14,7 @@ from docopt import docopt
 import donkeycar as dk
 from donkeycar.parts.tub_v2 import TubWriter
 from donkeycar.parts.datastore import TubHandler
-from donkeycar.parts.controller import LocalWebController
+from donkeycar.parts.controller import LocalWebController, WebFpv
 from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 
 
@@ -154,6 +154,9 @@ def drive(cfg, model_path=None, model_type=None):
         outputs=["user/angle", "user/throttle", "user/mode", "recording"],
         threaded=True,
     )
+
+    if cfg.USE_FPV:
+        car.add(WebFpv(), inputs=['cam/image_array'], threaded=True)
 
     # pilot condition to determine if user or ai are driving
     car.add(PilotCondition(), inputs=["user/mode"], outputs=["run_pilot"])
