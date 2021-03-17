@@ -125,9 +125,20 @@ def drive(cfg, model_path=None, model_type=None):
 
     # add controller
     if cfg.USE_JOYSTICK_AS_DEFAULT:
-        from donkeycar.parts.controller import get_js_controller
+        if cfg.CONTROLLER_TYPE == "custom":
+            from my_joystick import MyJoystickController
 
-        ctr = get_js_controller(cfg)
+            ctr = MyJoystickController(
+                throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
+                throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
+                steering_scale=cfg.JOYSTICK_STEERING_SCALE,
+                auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE,
+                dev_fn=cfg.JOYSTICK_DEVICE_FILE,
+            )
+        else:
+            from donkeycar.parts.controller import get_js_controller
+
+            ctr = get_js_controller(cfg)
         if cfg.USE_NETWORKED_JS:
             from donkeycar.parts.controller import JoyStickSub
 
