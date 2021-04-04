@@ -95,12 +95,12 @@ class BrickPiThrottle:
     def stop(self):
         runPair(self.motors, 0)
 
-    def close(self):
+    def shutdown(self):
         self.motors[0].shutdown()
         self.motors[1].shutdown()
 
 
-class BrickPiDriver:
+class BrickPiSteerDriver:
     def __init__(self):
         self.bp = BrickPi3()
 

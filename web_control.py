@@ -107,5 +107,5 @@ if __name__ == "__main__":
         pass
 
     webServer.server_close()
-    robot.close()
+    robot.shutdown()
     print("\n\n%sServer stopped.%s\n" % (GREEN, RESET))

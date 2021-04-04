@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from time import sleep
 
 from helpers import map_range, CYAN, RESET
@@ -6,7 +6,7 @@ from helpers import map_range, CYAN, RESET
 from brickpi3 import BrickPi3
 
 
-class BrickPiLargeMotor(object):
+class BrickPiDriveMotor(object):
     def __init__(self, port: int, bp: BrickPi3):
         self.bp: BrickPi3 = bp
 
@@ -29,7 +29,7 @@ class BrickPiLargeMotor(object):
     def stop(self):
         self.run(0)
 
-    def close(self):
+    def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
 
 
@@ -37,8 +37,8 @@ class BrickPiSteering(object):
     def __init__(self, port: int, bp: BrickPi3):
         self.bp = bp
 
-        self.angle: float = 0
-        self.max_angle: float = 0
+        self.angle = 0.0
+        self.max_angle = 0.0
 
         self.port = port
         self.calibrate()
@@ -70,38 +70,34 @@ class BrickPiSteering(object):
     def run_threaded(self):
         pass
 
-    def close(self):
+    def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
 
 
-def runPair(pair, speed):
-    pair[0].run(speed)
-    pair[1].run(speed)
-
-
-class BrickPiThrottle:
+class BrickPiThrottle(object):
     def __init__(self, bp: BrickPi3):
         self.bp = bp
 
         self.throttle: float = 0
         self.motors = (
-            BrickPiLargeMotor(self.bp.PORT_B, self.bp),
-            BrickPiLargeMotor(self.bp.PORT_C, self.bp),
+            BrickPiDriveMotor(self.bp.PORT_B, self.bp),
+            BrickPiDriveMotor(self.bp.PORT_C, self.bp),
         )
 
     def run(self, throttle: float):
-        runPair(self.motors, throttle)
+        for motor in self.motors:
+            motor.run(throttle)
 
     def stop(self):
-        self.motors[0].stop()
-        self.motors[1].stop()
+        for motor in self.motors:
+            motor.stop()
 
-    def close(self):
-        self.motors[0].close()
-        self.motors[1].close()
+    def shutdown(self):
+        for motor in self.motors:
+            motor.shutdown()
 
 
-class BrickPiDriver:
+class BrickPiSteerDriver(object):
     def __init__(self):
         self.bp = BrickPi3()
 
@@ -122,8 +118,60 @@ class BrickPiDriver:
     def stop(self):
         self.throttle.stop()
 
-    def close(self):
-        self.throttle.close()
-        self.steering.close()
+    def shutdown(self):
+        self.throttle.shutdown()
+        self.steering.shutdown()
 
         self.bp.reset_all()
+
+
+class BrickPiClaw(object):
+    def __init__(self, port: int, bp: BrickPi3):
+        self.bp = bp
+        self.port = port
+
+    def close(self):
+        self.bp.set_motor_power(self.port, 30)
+    
+    def open(self):
+        self.bp.set_motor_power(self.port, -30)
+        sleep(0.1)
+        self.shutdown()
+    
+    def shutdown(self):
+        self.bp.set_motor_power(self.port, 0)
+
+class BrickPiTwoWheelClawDriver(object):
+    def __init__(self):
+        self.bp = BrickPi3()
+
+        print("%sInitialising robot...%s" % (CYAN, RESET))
+
+        self.motors = (
+            BrickPiDriveMotor(self.bp.PORT_B, self.bp),
+            BrickPiDriveMotor(self.bp.PORT_C, self.bp)
+        )
+        self.claw = BrickPiClaw(self.bp.PORT_A, self.bp)
+        print("%sReady.%s\n" % (CYAN, RESET))
+    
+    def run(self, speed: Tuple[float, float]):
+        for x in speed:
+            if x > 1 or x < -1:
+                raise ValueError(
+                    "throttle must be between 1(forward)\
+                    and -1(reverse)"
+                )
+        
+        self.motors[0].run(speed[0])
+        self.motors[1].run(speed[1])
+    
+    def stop(self):
+        self.run((0, 0))
+    
+    def shutdown(self):
+        self.motors[0].shutdown()
+        self.motors[1].shutdown()
+        self.claw.shutdown()
+        
+        self.bp.reset_all()
+

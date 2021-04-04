@@ -190,9 +190,9 @@ def drive(cfg, model_path=None, model_type=None):
     elif cfg.DRIVE_TRAIN_TYPE == "BRICKPI":
         print("Using BrickPi...")
 
-        from parts import BrickPiDriver
+        from parts import BrickPiSteerDriver
 
-        car.add(BrickPiDriver(), inputs=["angle", "throttle"])
+        car.add(BrickPiSteerDriver(), inputs=["angle", "throttle"])
     else:
         steering_controller = PCA9685(
             cfg.STEERING_CHANNEL, cfg.PCA9685_I2C_ADDR, busnum=cfg.PCA9685_I2C_BUSNUM

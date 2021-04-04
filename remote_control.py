@@ -47,7 +47,7 @@ class Main(object):
                     # Exit button (event on press)
                     if value:
                         print("\n%sExiting...%s\n" % (GREEN, RESET))
-                        self.robot.close()
+                        self.robot.shutdown()
                         break
                 elif control == recalibrate_control:
                     if value:
@@ -72,4 +72,4 @@ if __name__ == "__main__":
         main.main()
     except KeyboardInterrupt:
         print("%sExiting...%s" % (GREEN, RESET))
-        main.robot.close()
+        main.robot.shutdown()

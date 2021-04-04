@@ -1,6 +1,6 @@
-from parts import BrickPiDriver
+from parts import BrickPiSteerDriver
 
 
 def get_robot():
-    robot = BrickPiDriver()
+    robot = BrickPiSteerDriver()
     return robot
