@@ -151,7 +151,7 @@ class BrickPiTwoWheelClawDriver(object):
             BrickPiDriveMotor(self.bp.PORT_B, self.bp),
             BrickPiDriveMotor(self.bp.PORT_C, self.bp)
         )
-        self.claw = BrickPiClaw(self.bp.PORT_A, self.bp)
+        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
         print("%sReady.%s\n" % (CYAN, RESET))
     
     def run(self, speed: Tuple[float, float]):
