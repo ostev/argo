@@ -4,7 +4,7 @@ from statistics import mean
 from gpiozero import Motor
 
 from Controller import Controller
-from get_robot import get_robot
+from get_robot import get_robot, get_claw_robot
 import Gamepad
 from helpers import map_range, clamp, RESET, GREEN
 
@@ -22,6 +22,8 @@ class Main(object):
     def __init__(self):
         self.throttle: float = 0
         self.steering: float = 0
+
+        self.mode = "steer"
 
         self.robot = get_robot()
 

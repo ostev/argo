@@ -1,7 +1,8 @@
-from typing import Optional, Tuple
+from typing import Optional
 from time import sleep
+import threading
 
-from helpers import map_range, CYAN, RESET
+from helpers import map_range
 
 from brickpi3 import BrickPi3
 
@@ -101,12 +102,8 @@ class BrickPiSteerDriver(object):
     def __init__(self):
         self.bp = BrickPi3()
 
-        print("%sInitialising robot...%s" % (CYAN, RESET))
-
         self.steering = BrickPiSteering(self.bp.PORT_D, self.bp)
         self.throttle = BrickPiThrottle(self.bp)
-
-        print("%sReady.%s\n" % (CYAN, RESET))
 
     def calibrate(self):
         self.steering.calibrate()
@@ -129,49 +126,62 @@ class BrickPiClaw(object):
     def __init__(self, port: int, bp: BrickPi3):
         self.bp = bp
         self.port = port
+        
+        self.closed_position: float = 0
+        self.open_position: float = 0
+
+        self.calibrate()
+    
+    def calibrate(self):
+        self.close()
+        sleep(0.4)
+        self.closed_position = self.bp.get_motor_encoder(self.port)
+        self.open_position = self.closed_position - 6
+        self.open()
 
     def close(self):
-        self.bp.set_motor_power(self.port, 30)
+        self.bp.set_motor_power(self.port, 40)
     
     def open(self):
-        self.bp.set_motor_power(self.port, -30)
-        sleep(0.1)
-        self.shutdown()
+        self.bp.set_motor_position(self.port, self.open_position)
     
     def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
 
-class BrickPiTwoWheelClawDriver(object):
+class BrickPiTwoWheelDriver(object):
     def __init__(self):
         self.bp = BrickPi3()
-
-        print("%sInitialising robot...%s" % (CYAN, RESET))
 
         self.motors = (
             BrickPiDriveMotor(self.bp.PORT_B, self.bp),
             BrickPiDriveMotor(self.bp.PORT_C, self.bp)
         )
-        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
-        print("%sReady.%s\n" % (CYAN, RESET))
     
-    def run(self, speed: Tuple[float, float]):
-        for x in speed:
+    def run(self, left: float, right: float):
+        for x in (left, right):
             if x > 1 or x < -1:
                 raise ValueError(
                     "throttle must be between 1(forward)\
                     and -1(reverse)"
                 )
         
-        self.motors[0].run(speed[0])
-        self.motors[1].run(speed[1])
+        self.motors[0].run(left)
+        self.motors[1].run(right)
     
     def stop(self):
-        self.run((0, 0))
+        self.run(0, 0)
     
     def shutdown(self):
         self.motors[0].shutdown()
         self.motors[1].shutdown()
-        self.claw.shutdown()
         
         self.bp.reset_all()
 
+class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
+    def __init__(self):
+        super().__init__()
+        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
+    
+    def shutdown(self):
+        self.claw.shutdown()
+        super().shutdown()
