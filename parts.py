@@ -2,7 +2,7 @@ from typing import Optional
 from time import sleep
 import threading
 
-from helpers import map_range
+from helpers import map_range, angle_to_tank
 
 from brickpi3 import BrickPi3
 
@@ -136,7 +136,7 @@ class BrickPiClaw(object):
         self.close()
         sleep(0.4)
         self.closed_position = self.bp.get_motor_encoder(self.port)
-        self.open_position = self.closed_position - 6
+        self.open_position = self.closed_position - 50
         self.open()
 
     def close(self):
@@ -157,13 +157,22 @@ class BrickPiTwoWheelDriver(object):
             BrickPiDriveMotor(self.bp.PORT_C, self.bp)
         )
     
-    def run(self, left: float, right: float):
-        for x in (left, right):
-            if x > 1 or x < -1:
-                raise ValueError(
-                    "throttle must be between 1(forward)\
-                    and -1(reverse)"
-                )
+    def run(self, steering: float, throttle: float):
+        if throttle > 1 or throttle < -1:
+            raise ValueError(
+                "throttle must be between 1(forward)\
+                and -1(reverse)"
+            )
+        
+        left = 0.0
+        right = 0.0
+
+        if steering == 1 or steering == -1:
+            (left, right) = (throttle, throttle * -1)
+        else:
+            steer = map_range(steering, -1, 1, -90, 90)
+
+            (left, right) = angle_to_tank(steer, throttle)
         
         self.motors[0].run(left)
         self.motors[1].run(right)
@@ -182,6 +191,35 @@ class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
         super().__init__()
         self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
     
+    def calibrate(self):
+        self.claw.calibrate()
+
     def shutdown(self):
         self.claw.shutdown()
         super().shutdown()
+
+class NoOpClaw(object):
+    def calibrate(self):
+        pass
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+class NoOpDriver(object):
+    def __init__(self):
+        self.claw = NoOpClaw()
+
+    def calibrate(self):
+        pass
+
+    def run(self, x, y):
+        pass
+    
+    def stop(self):
+        pass
+
+    def shutdown(self):
+        pass

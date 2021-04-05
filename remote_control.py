@@ -4,7 +4,7 @@ from statistics import mean
 from gpiozero import Motor
 
 from Controller import Controller
-from get_robot import get_robot, get_claw_robot
+from get_robot import get_robot, get_claw_robot, get_noop_robot
 import Gamepad
 from helpers import map_range, clamp, RESET, GREEN
 
@@ -13,19 +13,23 @@ gamepadType = Controller
 
 exit_control = "BACK"
 recalibrate_control = "START"
+change_mode_to_claw_control = "B"
+change_mode_to_steer_control = "Y"
 
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
 
+claw_control = "LT"
 
 class Main(object):
     def __init__(self):
         self.throttle: float = 0
         self.steering: float = 0
 
-        self.mode = "steer"
+        self.hasSwitchedMode = False
+        self.isInSteerMode = False
 
-        self.robot = get_robot()
+        self.robot = get_noop_robot()
 
     def main(self):
 
@@ -55,13 +59,36 @@ class Main(object):
                     if value:
                         print("%sRecalibrating...%s\n" % (GREEN, RESET))
                         self.robot.calibrate()
+                elif control == change_mode_to_claw_control:
+                    if self.isInSteerMode or (not self.hasSwitchedMode):
+                        print("Changing to claw mode...")
+                        self.isInSteerMode = False
+                        self.robot = get_claw_robot()
+
+                        self.hasSwitchedMode = True
+                elif control == change_mode_to_steer_control:
+                    if self.isInSteerMode or (not self.hasSwitchedMode):
+                        print("Changing to claw mode...")
+                        self.isInSteerMode = True
+                        self.robot = get_robot()
+
+                        self.hasSwitchedMode = True
+                elif control == claw_control:
+                    if not self.isInSteerMode:
+                        if value:
+                            self.robot.claw.close()
+                        else:
+                            self.robot.claw.open()
 
             elif eventType == "AXIS":
                 # Joystick changed
                 if control == left_speed_control:
                     self.throttle = value * -1
                 elif control == steering_control:
-                    self.steering = map_range(value, -1, 1, -0.8, 0.8)
+                    if self.isInSteerMode:
+                        self.steering = map_range(value, -1, 1, -0.7, 0.7)
+                    else:
+                        self.steering = value
                 # print("Left speed: " + str(left_speed))
                 # print("Right speed: " + str(right_speed))
                 self.robot.run(self.steering, self.throttle)
