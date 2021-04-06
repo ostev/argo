@@ -87,8 +87,11 @@ class Main(object):
                             self.robot.claw.open()
                 elif control == left_control:
                     self.is_left = value
+                    self.robot.turn_left(self.throttle)
                 elif control == right_control:
                     self.is_right = value
+                    self.robot.turn_right(self.throttle)
+
 
             elif eventType == "AXIS":
                 # Joystick changed
