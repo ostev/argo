@@ -2,7 +2,7 @@ from typing import Optional
 from time import sleep
 import threading
 
-from helpers import map_range, angle_to_tank
+from helpers import map_range, angle_to_tank, clamp
 
 from brickpi3 import BrickPi3
 
@@ -139,8 +139,12 @@ class BrickPiSteerDriver(Driver):
     def calibrate(self):
         self.steering.calibrate()
 
+    def steer(self, steering: float):
+        angle = map_range(steering, -1, 1, -0.8, 0.8)
+        self.steering.run(angle)
+
     def run(self, steering: float, throttle: float):
-        self.steering.run(steering)
+        self.steer(steering)
         self.throttle.run(throttle)
 
         super().run(steering, throttle)
@@ -149,11 +153,18 @@ class BrickPiSteerDriver(Driver):
         self.throttle.stop()
     
     def turn_left(self, throttle):
-        self.steering.run(-0.7)
+        if throttle > -0.4 and throttle < 0.4:
+            self.steer(-1)
+        else:
+            self.steer(-0.5)
         self.throttle.run(throttle)
     
     def turn_right(self, throttle):
-        self.steering.run(-0.7)
+        if throttle > -0.4 and throttle < 0.4:
+            self.steer(1)
+        else:
+            self.steer(0.5)
+        
         self.throttle.run(throttle)
 
     def shutdown(self):

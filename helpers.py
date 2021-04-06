@@ -27,6 +27,8 @@ def switch(
 
 default = lambda _: True
 
+def clamp(n, smallest, largest):
+    return max(smallest, min(n, largest))
 
 def map_range(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is

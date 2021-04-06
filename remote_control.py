@@ -73,8 +73,8 @@ class Main(object):
 
                         self.hasSwitchedMode = True
                 elif control == change_mode_to_steer_control:
-                    if self.isInSteerMode or (not self.hasSwitchedMode):
-                        print("Changing to claw mode...")
+                    if not self.isInSteerMode or (not self.hasSwitchedMode):
+                        print("Changing to steer mode...")
                         self.isInSteerMode = True
                         self.robot = get_robot()
 
@@ -87,10 +87,14 @@ class Main(object):
                             self.robot.claw.open()
                 elif control == left_control:
                     self.is_left = value
-                    self.robot.turn_left(self.throttle)
+                    if self.is_left:
+                        self.robot.turn_left(self.throttle)
                 elif control == right_control:
                     self.is_right = value
-                    self.robot.turn_right(self.throttle)
+                    if self.is_right:
+                        self.robot.turn_right(self.throttle)
+                    else:
+                        self.robot.run(self.steering, self.throttle)
 
 
             elif eventType == "AXIS":
@@ -98,10 +102,7 @@ class Main(object):
                 if control == left_speed_control:
                     self.throttle = value * -1
                 elif control == steering_control:
-                    if self.isInSteerMode:
-                        self.steering = map_range(value, -1, 1, -0.7, 0.7)
-                    else:
-                        self.steering = value
+                    self.steering = value
                 # print("Left speed: " + str(left_speed))
                 # print("Right speed: " + str(right_speed))
 
