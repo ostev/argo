@@ -6,6 +6,37 @@ from helpers import map_range, angle_to_tank
 
 from brickpi3 import BrickPi3
 
+class Claw(object):
+    def calibrate(self):
+        pass
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+class Driver(object):
+    def __init__(self):
+        self.claw = Claw()
+
+    def calibrate(self):
+        pass
+
+    def run(self, steering, throttle):
+        pass
+
+    def turn_left(self, throttle: float):
+        pass
+
+    def turn_right(self, throttle: float):
+        pass
+    
+    def stop(self):
+        pass
+
+    def shutdown(self):
+        pass
 
 class BrickPiDriveMotor(object):
     def __init__(self, port: int, bp: BrickPi3):
@@ -98,7 +129,7 @@ class BrickPiThrottle(object):
             motor.shutdown()
 
 
-class BrickPiSteerDriver(object):
+class BrickPiSteerDriver(Driver):
     def __init__(self):
         self.bp = BrickPi3()
 
@@ -112,8 +143,18 @@ class BrickPiSteerDriver(object):
         self.steering.run(steering)
         self.throttle.run(throttle)
 
+        super().run(steering, throttle)
+
     def stop(self):
         self.throttle.stop()
+    
+    def turn_left(self, throttle):
+        self.steering.run(-0.7)
+        self.throttle.run(throttle)
+    
+    def turn_right(self, throttle):
+        self.steering.run(-0.7)
+        self.throttle.run(throttle)
 
     def shutdown(self):
         self.throttle.shutdown()
@@ -122,7 +163,7 @@ class BrickPiSteerDriver(object):
         self.bp.reset_all()
 
 
-class BrickPiClaw(object):
+class BrickPiClaw(Claw):
     def __init__(self, port: int, bp: BrickPi3):
         self.bp = bp
         self.port = port
@@ -148,7 +189,7 @@ class BrickPiClaw(object):
     def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
 
-class BrickPiTwoWheelDriver(object):
+class BrickPiTwoWheelDriver(Driver):
     def __init__(self):
         self.bp = BrickPi3()
 
@@ -164,22 +205,25 @@ class BrickPiTwoWheelDriver(object):
                 and -1(reverse)"
             )
         
-        left = 0.0
-        right = 0.0
+        steer = map_range(steering, -1, 1, -90, 90)
+        (left, right) = angle_to_tank(steer, throttle)
 
-        if steering == 1 or steering == -1:
-            (left, right) = (throttle, throttle * -1)
-        else:
-            steer = map_range(steering, -1, 1, -90, 90)
-
-            (left, right) = angle_to_tank(steer, throttle)
-        
         self.motors[0].run(left)
         self.motors[1].run(right)
+
+        super().run(steering, throttle)
     
     def stop(self):
         self.run(0, 0)
+
+    def turn_left(self, throttle: float):
+        self.motors[0].run(throttle * -1)
+        self.motors[1].run(throttle)
     
+    def turn_right(self, throttle: float):
+        self.motors[0].run(throttle)
+        self.motors[1].run(throttle * -1)
+
     def shutdown(self):
         self.motors[0].shutdown()
         self.motors[1].shutdown()
@@ -197,29 +241,3 @@ class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
     def shutdown(self):
         self.claw.shutdown()
         super().shutdown()
-
-class NoOpClaw(object):
-    def calibrate(self):
-        pass
-
-    def open(self):
-        pass
-
-    def close(self):
-        pass
-
-class NoOpDriver(object):
-    def __init__(self):
-        self.claw = NoOpClaw()
-
-    def calibrate(self):
-        pass
-
-    def run(self, x, y):
-        pass
-    
-    def stop(self):
-        pass
-
-    def shutdown(self):
-        pass

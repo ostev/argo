@@ -1,4 +1,4 @@
-from parts import BrickPiSteerDriver, BrickPiTwoWheelClawDriver, NoOpDriver
+from parts import BrickPiSteerDriver, BrickPiTwoWheelClawDriver, Driver
 
 
 def get_robot():
@@ -10,5 +10,5 @@ def get_claw_robot():
     return robot
 
 def get_noop_robot():
-    robot = NoOpDriver()
+    robot = Driver()
     return robot

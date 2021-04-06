@@ -19,6 +19,9 @@ change_mode_to_steer_control = "Y"
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
 
+left_control = "LB"
+right_control = "RB"
+
 claw_control = "LT"
 
 class Main(object):
@@ -28,6 +31,9 @@ class Main(object):
 
         self.hasSwitchedMode = False
         self.isInSteerMode = False
+
+        self.is_left = False
+        self.is_right = False
 
         self.robot = get_noop_robot()
 
@@ -79,6 +85,10 @@ class Main(object):
                             self.robot.claw.close()
                         else:
                             self.robot.claw.open()
+                elif control == left_control:
+                    self.is_left = value
+                elif control == right_control:
+                    self.is_right = value
 
             elif eventType == "AXIS":
                 # Joystick changed
@@ -91,7 +101,13 @@ class Main(object):
                         self.steering = value
                 # print("Left speed: " + str(left_speed))
                 # print("Right speed: " + str(right_speed))
-                self.robot.run(self.steering, self.throttle)
+
+                if self.is_left:
+                    self.robot.turn_left(self.throttle)
+                elif self.is_right:
+                    self.robot.turn_right(self.throttle)
+                else:
+                    self.robot.run(self.steering, self.throttle)
 
 
 if __name__ == "__main__":
