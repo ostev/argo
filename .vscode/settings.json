@@ -8,5 +8,6 @@
         "**/env/*/**": true
     },
     "python.pythonPath": "env/bin/python",
+    "python.linting.enabled": false,
     "editor.formatOnSave": false
 }
