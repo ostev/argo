@@ -193,7 +193,7 @@ class BrickPiClaw(Claw):
 
     def close(self):
         self.bp.set_motor_power(self.port, 40)
-    
+   
     def open(self):
         self.bp.set_motor_position(self.port, self.open_position)
     

@@ -1,8 +1,12 @@
-from parts import BrickPiSteerDriver, BrickPiTwoWheelClawDriver, Driver
+from parts import BrickPiSteerDriver, BrickPiTwoWheelDriver, BrickPiTwoWheelClawDriver, Driver
 
 
 def get_robot():
     robot = BrickPiSteerDriver()
+    return robot
+
+def get_two_wheel_robot():
+    robot = BrickPiTwoWheelDriver()
     return robot
 
 def get_claw_robot():
