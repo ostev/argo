@@ -20,8 +20,8 @@ class Main(object):
 
         is_in_range = (False, False)
         pos = (0, 0)
-        target = (220, 335)
-        kp = 0.02
+        #target = (220, 335)
+        #kp = 0.02
 
         camera = PiCamera()
         camera.vflip = True
@@ -63,11 +63,10 @@ class Main(object):
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-                is_in_y_range = center[1] > 330
-                is_in_x_range = center[0] > 180 and center[0] < 260
+                is_in_range = (center[0] > 180 and center[0] < 260, center[1] > 330)
 
                 pos = center
-                error = (target[0] - pos[0], target[1] - pos[1])
+                # error = (target[0] - pos[0], target[1] - pos[1])
 
                 print(center)
 
@@ -75,7 +74,7 @@ class Main(object):
                     cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
                     cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-            speed = map_range(clamp(error[0] * kp, 0, 600), 0, 600, 0, 1)
+            #speed = map_range(clamp(error[0] * kp, 0, 600), 0, 600, 0, 1)
 
             # TODO: PID - see https://www.pyimagesearch.com/2019/04/01/pan-tilt-face-tracking-with-a-raspberry-pi-and-opencv/
 
@@ -107,3 +106,5 @@ if __name__ == "__main__":
         main.main()
     except:
         main.robot.shutdown()
+    # main = Main()
+    # main.main()
