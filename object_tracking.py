@@ -6,62 +6,104 @@ import cv2
 import imutils
 import time
 
+from get_robot import get_claw_robot
+from helpers import map_range
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
-green_lower = (29, 86, 6)
-green_upper = (64, 255, 255)
+green_lower = (50, 0, 0)
+green_upper = (90, 255, 255)
 
-def main():
-    camera = PiCamera()
-    camera.vflip = True
+class Main(object):
+    def main(self):
+        self.robot = get_claw_robot()
 
-    # Initialise the list of tracked points
-    points = deque(maxlen=10)
+        is_in_range = (False, False)
+        pos = (0, 0)
+        target = (220, 335)
+        kp = 0.02
 
-    vs = PiVideoCapture(camera)
+        camera = PiCamera()
+        camera.vflip = True
+        camera.hflip = True
 
-    # Allow the camera time to warm up
-    time.sleep(1)
+        # # Initialise the list of tracked points
+        # points = deque(maxlen=10)
 
-    while True:
-        frame = vs.read()
+        vs = PiVideoCapture(camera)
 
-        frame = imutils.resize(frame, width=600)
-        blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        # Allow the camera time to warm up
+        time.sleep(1)
 
-        # Construct a mask fr the color green, then dilate
-        # and erode the image to remove any small blobs left.
-        mask = cv2.inRange(hsv, green_lower, green_upper)
-        mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=2)
+        while True:
+            frame = vs.read()
 
-        # Find the countours (jargon for "outlines") in the
-        # mask and use it to compute the centre of the ball.
-        contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = imutils.grab_contours(contours)
-        center = None
+            frame = imutils.resize(frame, width=600)
+            blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+            hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
-        if len(contours) > 0:
-            # Find the largest countour in the mask, then
-            # use it to compute the minimum enclosing circle
-            # and centroid
-            c = max(contours, key=cv2.contourArea)
-            ((x, y), radius) = cv2.minEnclosingCircle(c)
-            M = cv2.moments(c)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-            print(center[1] > 365)
-            if radius > 10:
-                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-                cv2.circle(frame, center, 5, (0, 0, 255), -1)
-        
-        points.appendleft(center)
+            # Construct a mask for the color green, then dilate
+            # and erode the image to remove any small blobs left.
+            mask = cv2.inRange(hsv, green_lower, green_upper)
+            mask = cv2.erode(mask, None, iterations=2)
+            mask = cv2.dilate(mask, None, iterations=2)
 
-        vs.clear_buffer()
+            # Find the countours (jargon for "outlines") in the
+            # mask and use it to compute the centre of the ball.
+            contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            contours = imutils.grab_contours(contours)
+            center = None
 
-        cv2.imwrite("./test.jpg", frame)
+            if len(contours) > 0:
+                # Find the largest countour in the mask, then
+                # use it to compute the minimum enclosing circle
+                # and centroid
+                c = max(contours, key=cv2.contourArea)
+                ((x, y), radius) = cv2.minEnclosingCircle(c)
+                M = cv2.moments(c)
+                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+
+                is_in_y_range = center[1] > 330
+                is_in_x_range = center[0] > 180 and center[0] < 260
+
+                pos = center
+                error = (target[0] - pos[0], target[1] - pos[1])
+
+                print(center)
+
+                if radius > 10:
+                    cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                    cv2.circle(frame, center, 5, (0, 0, 255), -1)
+
+            speed = map_range(clamp(error[0] * kp, 0, 600), 0, 600, 0, 1)
+
+            # TODO: PID - see https://www.pyimagesearch.com/2019/04/01/pan-tilt-face-tracking-with-a-raspberry-pi-and-opencv/
+
+            if is_in_range[1] and is_in_range[0]:
+                self.robot.claw.close()
+                self.robot.stop()
+            else:
+                self.robot.claw.open()
+                if not is_in_range[1]:
+                    self.robot.run(0, 0.3)
+
+                if not is_in_range[0]:
+                    if x < 220:
+                        self.robot.turn_left(0.3)
+                    else:
+                        self.robot.turn_right(0.3)
+
+
+            # points.appendleft(center)
+
+            vs.clear_buffer()
+
+            # cv2.imwrite("./test.jpg", frame)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main = Main()
+        main.main()
+    except:
+        main.robot.shutdown()
