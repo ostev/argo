@@ -9,14 +9,21 @@ import sys
 
 from get_robot import get_claw_robot
 from PID import PID
-from helpers import map_range
+from helpers import map_range, Enumeration
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
 green_lower = (50, 0, 0)
 green_upper = (90, 255, 255)
 
+pink_lower = (150, 0, 0)
+pink_upper = (160, 255, 255)
 
+
+modes = Enumeration("""
+    pick_up_green,
+    deposit_green,
+    """)
 class Main(object):
     def shutdown(self):
         self.robot.shutdown()
@@ -27,6 +34,10 @@ class Main(object):
         is_in_range = (False, False)
         pos = (0, 0)
         target = (220, 335)
+
+        ticks_since_grabbed = 0
+
+        mode = modes.pick_up_green
         
         pid = PID(0.7, 0, 0)
 
@@ -51,8 +62,11 @@ class Main(object):
             hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
             # Construct a mask for the color green, then dilate
-            # and erode the image to remove any small blobs left.
-            mask = cv2.inRange(hsv, green_lower, green_upper)
+            # and erode the image to remove any remaining small blobs.
+            if mode == modes.pick_up_green:
+                mask = cv2.inRange(hsv, green_lower, green_upper)
+            elif mode == modes.deposit_green:
+                mask = cv2.inRange(hsv, pink_lower, pink_upper)
             mask = cv2.erode(mask, None, iterations=2)
             mask = cv2.dilate(mask, None, iterations=2)
 
@@ -71,22 +85,38 @@ class Main(object):
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-                is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 360)
+                if mode == modes.pick_up_green:
+                    is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 360)
+                elif mode == modes.deposit_green:
+                    is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 20)
 
                 pos = center
 
                 # print(center)
 
-                if radius > 10:
-                    cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-                    cv2.circle(frame, center, 5, (0, 0, 255), -1)
+                # if radius > 10:
+                #     cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             #speed = map_range(clamp(error[0] * kp, 0, 600), 0, 600, 0, 1)
 
             if is_in_range[1] and is_in_range[0]:
-                self.robot.claw.close()
-                self.robot.stop()
+                if mode == modes.pick_up_green:
+                    self.robot.claw.close()
+                    self.robot.stop()
+
+                    ticks_since_grabbed += 1
+                    
+                    # if ticks_since_grabbed >= 6:
+                    #     mode = modes.deposit_green
+                elif mode == modes.deposit_green:
+                    ticks_since_grabbed += 1
+        
+                    self.robot.stop()
+                    self.robot.claw.open()
             else:
+                ticks_since_grabbed = 0
+
                 self.robot.claw.open()
 
                 # if not is_in_range[0]:
