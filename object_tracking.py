@@ -7,7 +7,7 @@ import imutils
 import time
 import sys
 
-from get_robot import get_claw_robot
+from get_robot import get_claw_gyro_robot
 from PID import PID
 from helpers import map_range, Enumeration
 
@@ -30,7 +30,7 @@ class Main(object):
         sys.exit()
 
     def main(self):
-        self.robot = get_claw_robot()
+        self.robot = get_claw_gyro_robot()
         is_in_range = (False, False)
         pos = (0, 0)
         target = (220, 335)
@@ -52,6 +52,14 @@ class Main(object):
 
         # Allow the camera time to warm up
         time.sleep(1)
+
+        self.robot.run_dps(0, -200)
+        time.sleep(1)
+        self.robot.stop()
+        self.robot.rotate_to(90, 1)
+        self.robot.run_dps(0, 200)
+        time.sleep(0.6)
+        self.robot.stop()
 
         while True:
             frame = vs.read()
@@ -98,8 +106,6 @@ class Main(object):
                 #     cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
                 #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-            #speed = map_range(clamp(error[0] * kp, 0, 600), 0, 600, 0, 1)
-
             if is_in_range[1] and is_in_range[0]:
                 if mode == modes.pick_up_green:
                     self.robot.claw.close()
@@ -107,28 +113,37 @@ class Main(object):
 
                     ticks_since_grabbed += 1
                     
-                    # if ticks_since_grabbed >= 6:
-                    #     mode = modes.deposit_green
+                    if ticks_since_grabbed > 3:
+                        mode = modes.deposit_green
                 elif mode == modes.deposit_green:
-                    ticks_since_grabbed += 1
+                    self.robot.claw.close()
+
+                    self.robot.rotate_to(-90, 1)
+                    self.robot.run_dps(0, 750)
+                    time.sleep(1)
+                    self.robot.stop()
+                    self.robot.rotate_to(0, 1)
+                    self.robot.run_dps(0, 300)
+                    time.sleep(1)
         
                     self.robot.stop()
                     self.robot.claw.open()
+
+                    time.sleep(1)
+
+                    break
             else:
                 ticks_since_grabbed = 0
 
                 self.robot.claw.open()
 
-                # if not is_in_range[0]:
-                #     if x < 220:
-                #         self.robot.turn_left(0.3)
-                #     else:
-                #         self.robot.turn_right(0.3)
-                update = map_range(pid.update(target[0] - pos[0]), -130, 130, -1, 1) * -1
-                # if not is_in_range[1]:
-                #     self.robot.run(update, 0.3)
-                # else:
-                #     self.robot.run(update, 0)
+                update = map_range(
+                        pid.update(target[0] - pos[0]),
+                        -130,
+                        130,
+                        -1,
+                        1
+                    ) * -1
                 self.robot.run(update, 0.3)
 
 

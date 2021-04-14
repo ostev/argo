@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from time import sleep
 import threading
 
@@ -26,6 +26,9 @@ class Driver(object):
     def run(self, steering, throttle):
         pass
 
+    def run_dps(self, steering, throttle):
+        pass
+
     def turn_left(self, throttle: float):
         pass
 
@@ -42,21 +45,19 @@ class BrickPiDriveMotor(object):
     def __init__(self, port: int, bp: BrickPi3):
         self.bp: BrickPi3 = bp
 
-        self.speed: float = 0
-
         self.port = port
 
-    def run(self, speed: float) -> None:
-
-        self.speed = speed
-
+    def run(self, speed: float):
         if speed > 1 or speed < -1:
             raise ValueError(
                 "throttle must be between 1(forward)\
                  and -1(reverse)"
             )
 
-        self.bp.set_motor_power(self.port, self.speed * -100)
+        self.bp.set_motor_power(self.port, speed * -100)
+    
+    def run_dps(self, dps: int):
+        self.bp.set_motor_dps(self.port, dps * -1)
 
     def stop(self):
         self.run(0)
@@ -99,9 +100,6 @@ class BrickPiSteering(object):
 
         self.bp.set_motor_position(self.port, self.angle)
 
-    def run_threaded(self):
-        pass
-
     def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
 
@@ -119,6 +117,10 @@ class BrickPiThrottle(object):
     def run(self, throttle: float):
         for motor in self.motors:
             motor.run(throttle)
+    
+    def run_dps(self, dps: float):
+        for motor in self.motors:
+            motor.run_dps(dps)
 
     def stop(self):
         for motor in self.motors:
@@ -146,8 +148,10 @@ class BrickPiSteerDriver(Driver):
     def run(self, steering: float, throttle: float):
         self.steer(steering)
         self.throttle.run(throttle)
-
-        super().run(steering, throttle)
+    
+    def run_dps(self, steering: float, dps: int):
+        self.steer(steering)
+        self.throttle.run_dps(dps)
 
     def stop(self):
         self.throttle.stop()
@@ -222,7 +226,10 @@ class BrickPiTwoWheelDriver(Driver):
         self.motors[0].run(left)
         self.motors[1].run(right)
 
-        super().run(steering, throttle)
+    """Can only go straight. `steering` ignored."""
+    def run_dps(self, steering, dps: int):
+        self.motors[0].run_dps(dps)
+        self.motors[1].run_dps(dps)
     
     def stop(self):
         self.run(0, 0)
@@ -252,3 +259,52 @@ class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
     def shutdown(self):
         self.claw.shutdown()
         super().shutdown()
+
+class BrickPiGyro:
+    def __init__(self, port: int, bp: BrickPi3):
+        self.bp = bp
+        self.port = port
+        
+        self.bp.set_sensor_type(
+            self.port,
+            self.bp.SENSOR_TYPE.EV3_GYRO_ABS_DPS
+        )
+        
+        # Wait for the sensor to warm up...
+        sleep(3)
+
+        self.calibrate()
+
+    def calibrate(self):
+        self.starting_angle = 0
+        self.starting_angle = self.get()[0]
+    
+    def get(self) -> Tuple[int, int]:
+        data = self.bp.get_sensor(self.port)
+
+        return (data[0] - self.starting_angle, data[1])
+
+class BrickPiTwoWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
+    def __init__(self):
+        super().__init__()
+        self.gyro = BrickPiGyro(self.bp.PORT_3, self.bp)
+    
+    def calibrate(self):
+        super().calibrate()
+        self.gyro.calibrate()
+    
+    def rotate_to(self, targetAngle: int, throttle: float, acceptableError = 1):
+        while True:
+            current_angle = self.gyro.get()[0]
+            angle_left = current_angle - targetAngle
+
+            if angle_left > (0 - acceptableError) \
+                and angle_left < acceptableError:
+                break
+            else:
+                if angle_left < 0:
+                    self.turn_right(throttle)
+                else:
+                    self.turn_left(throttle)
+        
+        self.stop()
