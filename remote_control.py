@@ -1,5 +1,5 @@
 from time import sleep
-from statistics import mean
+from enum import Enum
 
 from gpiozero import Motor
 
@@ -13,8 +13,10 @@ gamepadType = Controller
 
 exit_control = "BACK"
 recalibrate_control = "START"
+change_mode_to_noop_control = "A"
 change_mode_to_claw_control = "B"
 change_mode_to_steer_control = "Y"
+change_mode_to_claw_partial_control = "X"
 
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
@@ -24,13 +26,18 @@ right_control = "RB"
 
 claw_control = "LT"
 
+class Mode(Enum):
+    noop = 0
+    steer = 1
+    claw = 2
+    claw_partial = 3
+
 class Main(object):
     def __init__(self):
         self.throttle: float = 0
         self.steering: float = 0
 
-        self.hasSwitchedMode = False
-        self.isInSteerMode = False
+        self.mode = Mode.noop
 
         self.is_left = False
         self.is_right = False
@@ -66,21 +73,36 @@ class Main(object):
                         print("%sRecalibrating...%s\n" % (GREEN, RESET))
                         self.robot.calibrate()
                 elif control == change_mode_to_claw_control:
-                    if self.isInSteerMode or (not self.hasSwitchedMode):
+                    if not (self.mode == Mode.claw):
                         print("Changing to claw mode...")
-                        self.isInSteerMode = False
+                        self.mode = Mode.claw
                         self.robot = get_claw_robot()
 
-                        self.hasSwitchedMode = True
                 elif control == change_mode_to_steer_control:
-                    if not self.isInSteerMode or (not self.hasSwitchedMode):
+                    if not (self.mode == Mode.steer):
                         print("Changing to steer mode...")
-                        self.isInSteerMode = True
+                        self.mode = Mode.steer
                         self.robot = get_robot()
+                
+                elif control == change_mode_to_noop_control:
+                    if not (self.mode == Mode.noop):
+                        print("Changing to no-op mode...")
+                        self.mode = Mode.noop
+                        self.robot = get_noop_robot()
+                
+                elif control == change_mode_to_claw_partial_control:
+                    if not (self.mode == Mode.claw_partial):
+                        print("Changing to partial-close claw mode...")
+                        self.mode = Mode.claw_partial
+                        self.robot = get_claw_robot()
 
-                        self.hasSwitchedMode = True
                 elif control == claw_control:
-                    if not self.isInSteerMode:
+                    if self.mode == Mode.claw_partial:
+                        if value:
+                            self.robot.claw.set_position(30)
+                        else:
+                            self.robot.claw.open()
+                    else:
                         if value:
                             self.robot.claw.close()
                         else:

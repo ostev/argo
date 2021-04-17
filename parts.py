@@ -15,6 +15,9 @@ class Claw(object):
 
     def close(self):
         pass
+    
+    def set_position(self, pos: int):
+        pass
 
 class Driver(object):
     def __init__(self):
@@ -200,6 +203,9 @@ class BrickPiClaw(Claw):
    
     def open(self):
         self.bp.set_motor_position(self.port, self.open_position)
+    
+    def set_position(self, pos: int):
+        self.bp.set_motor_position(self.port, self.open_position + pos)
     
     def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
