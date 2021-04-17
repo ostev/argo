@@ -6,24 +6,27 @@ import cv2
 import imutils
 import time
 import sys
+from enum import Enum
 
 from get_robot import get_claw_gyro_robot
 from PID import PID
-from helpers import map_range, Enumeration
+from helpers import map_range
+
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
 green_lower = (50, 0, 0)
 green_upper = (90, 255, 255)
 
-pink_lower = (150, 0, 0)
-pink_upper = (160, 255, 255)
+blue_lower = (150, 0, 0)
+blue_upper = (190, 255, 255)
 
+class Mode(Enum):
+    pick_up_green = 0
+    deposit_green = 1
+    pick_up_blue = 2
+    deposit_blue = 3
 
-modes = Enumeration("""
-    pick_up_green,
-    deposit_green,
-    """)
 class Main(object):
     def shutdown(self):
         self.robot.shutdown()
@@ -37,7 +40,7 @@ class Main(object):
 
         ticks_since_grabbed = 0
 
-        mode = modes.pick_up_green
+        mode = Mode.pick_up_green
         
         pid = PID(0.7, 0, 0)
 
@@ -53,12 +56,12 @@ class Main(object):
         # Allow the camera time to warm up
         time.sleep(1)
 
-        self.robot.run_dps(0, -200)
+        self.robot.run_dps(0, -300)
         time.sleep(1)
         self.robot.stop()
         self.robot.rotate_to(90, 1)
-        self.robot.run_dps(0, 200)
-        time.sleep(0.6)
+        self.robot.run_dps(0, 700)
+        time.sleep(1.5)
         self.robot.stop()
 
         while True:
@@ -71,10 +74,11 @@ class Main(object):
 
             # Construct a mask for the color green, then dilate
             # and erode the image to remove any remaining small blobs.
-            if mode == modes.pick_up_green:
+            if mode == Mode.pick_up_green:
                 mask = cv2.inRange(hsv, green_lower, green_upper)
-            elif mode == modes.deposit_green:
-                mask = cv2.inRange(hsv, pink_lower, pink_upper)
+            elif mode == Mode.pick_up_blue:
+                mask = cv2.inRange(hsv, blue_lower, blue_upper)
+
             mask = cv2.erode(mask, None, iterations=2)
             mask = cv2.dilate(mask, None, iterations=2)
 
@@ -93,9 +97,9 @@ class Main(object):
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-                if mode == modes.pick_up_green:
+                if mode == Mode.pick_up_green:
                     is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 360)
-                elif mode == modes.deposit_green:
+                elif mode == Mode.deposit_green:
                     is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 20)
 
                 pos = center
@@ -107,23 +111,24 @@ class Main(object):
                 #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             if is_in_range[1] and is_in_range[0]:
-                if mode == modes.pick_up_green:
+                if mode == Mode.pick_up_green or mode == Mode.pick_up_blue:
                     self.robot.claw.close()
                     self.robot.stop()
 
                     ticks_since_grabbed += 1
                     
                     if ticks_since_grabbed > 3:
-                        mode = modes.deposit_green
-                elif mode == modes.deposit_green:
+                        mode = Mode.deposit_green if mode == Mode.pick_up_green else Mode.deposit_blue
+                elif mode == Mode.deposit_green:
                     self.robot.claw.close()
 
                     self.robot.rotate_to(-90, 1)
-                    self.robot.run_dps(0, 750)
-                    time.sleep(1)
+                    self.robot.run_dps(0, 700)
+                    time.sleep(1.5)
                     self.robot.stop()
+                    time.sleep(0.2)
                     self.robot.rotate_to(0, 1)
-                    self.robot.run_dps(0, 300)
+                    self.robot.run_dps(0, 400)
                     time.sleep(1)
         
                     self.robot.stop()
@@ -131,7 +136,13 @@ class Main(object):
 
                     time.sleep(1)
 
-                    break
+                    mode = Mode.pick_up_blue
+
+                    self.robot.run_dps(0, -400)
+                    time.sleep(1)
+                    self.robot.rotate_to(120, 1)
+                    self.robot.run_dps(0, 700)
+                    time.sleep(1.5)
             else:
                 ticks_since_grabbed = 0
 

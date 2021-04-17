@@ -271,7 +271,7 @@ class BrickPiGyro:
         )
         
         # Wait for the sensor to warm up...
-        sleep(3)
+        sleep(5)
 
         self.calibrate()
 
