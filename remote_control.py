@@ -99,7 +99,7 @@ class Main(object):
                 elif control == claw_control:
                     if self.mode == Mode.claw_partial:
                         if value:
-                            self.robot.claw.set_position(34)
+                            self.robot.claw.set_position(40)
                         else:
                             self.robot.claw.open()
                     else:
