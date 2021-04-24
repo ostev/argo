@@ -17,12 +17,36 @@ from helpers import map_range
 # in HSV colour space
 green_lower = (50, 0, 0)
 green_upper = (100, 255, 255)
-
-red_lower = (320, 0, 0)
-red_upper = (360, 0, 0)
+red_lower = (160, 0, 0)
+red_upper = (180, 255, 255)
+# red_lower = green_lower
+# red_upper = green_upper
 
 blue_lower = (190, 0, 0)
 blue_upper = (250, 255, 255)
+
+def change_mode(mode):
+    if mode == Mode.pick_up_green:
+        return Mode.deposit_green
+    elif mode == Mode.pick_up_red:
+        return Mode.deposit_red
+    elif mode == Mode.pick_up_blue:
+        return Mode.deposit_blue
+
+def get_mask(hsv, mode):
+    if mode == Mode.pick_up_green:
+        return cv2.inRange(hsv, green_lower, green_upper)
+    elif mode == Mode.pick_up_red:
+        return cv2.inRange(hsv, red_lower, red_upper)
+    elif mode == Mode.pick_up_blue:
+        return cv2.inRange(hsv, blue_lower, blue_upper)
+    else:
+        raise ValueError("Incorrect mode")
+
+def mode_is_pick_up(mode):
+    return mode == Mode.pick_up_green \
+        or mode == Mode.pick_up_red \
+        or mode == Mode.pick_up_blue
 
 class Mode(Enum):
     pick_up_green = 0
@@ -43,7 +67,7 @@ class Main(object):
         pos = (0, 0)
         target = (220, 335)
 
-        ticks_since_grabbed = 0
+        self.ticks_since_grabbed = 0
 
         mode = Mode.pick_up_green
         
@@ -77,90 +101,109 @@ class Main(object):
             blurred = cv2.GaussianBlur(frame, (11, 11), 0)
             hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
-            # Construct a mask for the relevant color, then dilate
-            # and erode the image to remove any remaining small blobs.
-            if mode == Mode.pick_up_green:
-                mask = cv2.inRange(hsv, green_lower, green_upper)
-            elif mode == Mode.pick_up_blue:
-                mask = cv2.inRange(hsv, blue_lower, blue_upper)
-            elif mode == Mode.pick_up_red:
-                mask = cv2.inRange(hsv, red_lower, red_upper)
+            if mode_is_pick_up(mode):
+                # Construct a mask for the relevant color, then dilate
+                # and erode the image to remove any remaining small blobs.
+                mask = get_mask(hsv, mode)
 
-            mask = cv2.erode(mask, None, iterations=2)
-            mask = cv2.dilate(mask, None, iterations=2)
+                mask = cv2.erode(mask, None, iterations=2)
+                mask = cv2.dilate(mask, None, iterations=2)
 
-            # Find the countours (jargon for "outlines") in the
-            # mask and use it to compute the centre of the ball.
-            contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            contours = imutils.grab_contours(contours)
-            center = None
+                # Find the countours (jargon for "outlines") in the
+                # mask and use it to compute the centre of the ball.
+                contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                contours = imutils.grab_contours(contours)
+                center = None
+                print(center)
 
-            if len(contours) > 0:
-                # Find the largest countour in the mask, then
-                # use it to compute the minimum enclosing circle
-                # and centroid
-                c = max(contours, key=cv2.contourArea)
-                ((x, y), radius) = cv2.minEnclosingCircle(c)
-                M = cv2.moments(c)
-                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                if len(contours) > 0:
+                    # Find the largest countour in the mask, then
+                    # use it to compute the minimum enclosing circle
+                    # and centroid
+                    c = max(contours, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(c)
+                    M = cv2.moments(c)
+                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-                if mode == Mode.pick_up_green:
                     is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 360)
-                elif mode == Mode.deposit_green:
-                    is_in_range = (center[0] > 110 and center[0] < 320, center[1] > 20)
 
-                pos = center
+                    pos = center
 
-                # print(center)
+                    print(pos)
 
-                if radius > 10:
-                    cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-                    cv2.circle(frame, center, 5, (0, 0, 255), -1)
+                    # print(center)
+
+                    if radius > 10:
+                        cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                        cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             if is_in_range[1] and is_in_range[0]:
-                if mode == Mode.pick_up_green \
-                    or mode == Mode.pick_up_blue \
-                    or mode == Mode.pick_up_red:
+                if mode_is_pick_up(mode):
+
+                    print(mode)
 
                     self.robot.claw.close()
                     self.robot.stop()
 
-                    ticks_since_grabbed += 1
+                    self.ticks_since_grabbed += 1
+                    print(self.ticks_since_grabbed)
                     
-                    if ticks_since_grabbed > 3:
-                        mode = Mode.deposit_green \
-                            if mode == Mode.pick_up_green \
-                            else (Mode.deposit_red \
-                                if mode == Mode.pick_up_red \
-                                else Mode.deposit_blue)
-                elif mode == Mode.deposit_green:
-                    self.robot.stop()
+                    if self.ticks_since_grabbed > 3:
+                        mode = change_mode(mode)
+                        print(str(mode) + "b")
+                        is_in_range = (False, False)
+                        self.ticks_since_grabbed = 0
+                        
+            if mode == Mode.deposit_green:
+                self.robot.stop()
 
-                    self.robot.claw.close()
+                self.robot.claw.close()
 
-                    self.robot.rotate_to(90, 0.4)
-                    self.robot.run_dps(0, -600)
-                    sleep(2)
-                    self.robot.stop()
-                    sleep(0.07)
-                    self.robot.rotate_to(0, 1)
-                    self.robot.stop()
-                    sleep(0.07)
-                    self.robot.run_dps(0, 300)
-                    sleep(1)
+                self.robot.rotate_to(90, 0.4)
+                self.robot.run_dps(0, -600)
+                sleep(2)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.rotate_to(0, 1)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.run_dps(0, 300)
+                sleep(1)
         
-                    self.robot.stop()
-                    self.robot.claw.open()
+                self.robot.stop()
+                self.robot.claw.open()
 
-                    sleep(1)
+                sleep(0.5)
 
-                    mode = Mode.pick_up_red
+                mode = Mode.pick_up_red
 
-                    self.robot.run_dps(0, -400)
-                    sleep(1)
-                    self.robot.rotate_to(125, 1)
-                    self.robot.run_dps(0, 600)
-                    sleep(1.6)
+                self.robot.run_dps(0, -400)
+                sleep(1)
+                self.robot.rotate_to(125, 1)
+                self.robot.run_dps(0, 600)
+                sleep(1.6)
+
+                print(str(mode) + "c")
+            elif mode == Mode.deposit_red:
+                self.robot.rotate_to(90, 0.4)
+                self.robot.run_dps(0, -600)
+                sleep(2.2)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.rotate_to(0, 1)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.run_dps(0, 400)
+                sleep(0.8)
+                    
+                self.robot.stop()
+                self.robot.claw.open()
+
+                sleep(0.5)
+
+                mode = Mode.pick_up_blue
+
+                break
             else:
                 ticks_since_grabbed = 0
 

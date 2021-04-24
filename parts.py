@@ -121,7 +121,7 @@ class BrickPiThrottle(object):
         for motor in self.motors:
             motor.run(throttle)
     
-    def run_dps(self, dps: float):
+    def run_dps(self, dps: int):
         for motor in self.motors:
             motor.run_dps(dps)
 
