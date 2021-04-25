@@ -15,15 +15,14 @@ from helpers import map_range
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
-green_lower = (50, 0, 0)
-green_upper = (100, 255, 255)
-red_lower = (160, 0, 0)
-red_upper = (180, 255, 255)
-# red_lower = green_lower
-# red_upper = green_upper
+green_lower = (50, 30, 0)
+green_upper = (100, 255, 190)
 
-blue_lower = (190, 0, 0)
-blue_upper = (250, 255, 255)
+red_lower = (160, 30, 0)
+red_upper = (180, 255, 190)
+
+blue_lower = (80, 30, 0)
+blue_upper = (125, 255, 190)
 
 def change_mode(mode):
     if mode == Mode.pick_up_green:
@@ -88,7 +87,7 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(90, 1)
+        self.robot.rotate_to(90, 0.8)
         self.robot.run_dps(0, 700)
         sleep(1.5)
         self.robot.stop()
@@ -114,7 +113,7 @@ class Main(object):
                 contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 contours = imutils.grab_contours(contours)
                 center = None
-                print(center)
+                print(mode)
 
                 if len(contours) > 0:
                     # Find the largest countour in the mask, then
@@ -148,7 +147,7 @@ class Main(object):
                     self.ticks_since_grabbed += 1
                     print(self.ticks_since_grabbed)
                     
-                    if self.ticks_since_grabbed > 3:
+                    if self.ticks_since_grabbed > 1:
                         mode = change_mode(mode)
                         print(str(mode) + "b")
                         is_in_range = (False, False)
@@ -159,12 +158,12 @@ class Main(object):
 
                 self.robot.claw.close()
 
-                self.robot.rotate_to(90, 0.4)
+                self.robot.rotate_to(90, 0.3, 0)
                 self.robot.run_dps(0, -600)
-                sleep(2)
+                sleep(2.1)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(0, 1)
+                self.robot.rotate_to(0, 0.3)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 300)
@@ -177,24 +176,26 @@ class Main(object):
 
                 mode = Mode.pick_up_red
 
-                self.robot.run_dps(0, -400)
-                sleep(1)
-                self.robot.rotate_to(125, 1)
+                self.robot.run_dps(0, -700)
+                sleep(0.7)
+                self.robot.rotate_to(125, 1, 1)
                 self.robot.run_dps(0, 600)
                 sleep(1.6)
 
-                print(str(mode) + "c")
             elif mode == Mode.deposit_red:
-                self.robot.rotate_to(90, 0.4)
-                self.robot.run_dps(0, -600)
-                sleep(2.2)
+                self.robot.stop()
+                self.robot.claw.close()
+
+                self.robot.rotate_to(90, 0.3)
+                self.robot.run_dps(0, -700)
+                sleep(2.5)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(0, 1)
+                self.robot.rotate_to(0, 0.3)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.run_dps(0, 400)
-                sleep(0.8)
+                self.robot.run_dps(0, 700)
+                sleep(2.6)
                     
                 self.robot.stop()
                 self.robot.claw.open()
@@ -203,7 +204,34 @@ class Main(object):
 
                 mode = Mode.pick_up_blue
 
+                self.robot.run_dps(0, -700)
+                sleep(1.7)
+                self.robot.rotate_to(131, 1, 1)
+                self.robot.run_dps(0, 600)
+                sleep(2)
+            
+            elif mode == Mode.deposit_blue:
+                self.robot.stop()
+                self.robot.claw.close()
+
+                self.robot.rotate_to(90, 0.3)
+                self.robot.run_dps(0, -600)
+                sleep(1.4)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.rotate_to(0, 0.3)
+                self.robot.stop()
+                sleep(0.07)
+                self.robot.run_dps(0, 700)
+                sleep(3.8)
+                    
+                self.robot.stop()
+                self.robot.claw.open()
+
+                sleep(0.5)
+
                 break
+
             else:
                 ticks_since_grabbed = 0
 
