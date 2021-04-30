@@ -121,7 +121,7 @@ class BrickPiThrottle(object):
         for motor in self.motors:
             motor.run(throttle)
     
-    def run_dps(self, dps: float):
+    def run_dps(self, dps: int):
         for motor in self.motors:
             motor.run_dps(dps)
 
@@ -299,18 +299,20 @@ class BrickPiTwoWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
         super().calibrate()
         self.gyro.calibrate()
     
-    def rotate_to(self, targetAngle: int, throttle: float, acceptableError = 1):
+    def rotate_to(self, targetAngle: int, throttle: float, acceptableError = 0):
         while True:
             current_angle = self.gyro.get()[0]
             angle_left = current_angle - targetAngle
 
-            if angle_left > (0 - acceptableError) \
-                and angle_left < acceptableError:
+            if angle_left >= (0 - acceptableError) \
+                and angle_left <= acceptableError:
                 break
             else:
                 if angle_left < 0:
                     self.turn_right(throttle)
                 else:
                     self.turn_left(throttle)
+            
+            sleep(0.05)
         
         self.stop()
