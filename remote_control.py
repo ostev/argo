@@ -141,6 +141,6 @@ if __name__ == "__main__":
 
     try:
         main.main()
-    except KeyboardInterrupt:
+    finally:
         print("%sExiting...%s" % (GREEN, RESET))
         main.robot.shutdown()
