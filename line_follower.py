@@ -1,106 +1,92 @@
 from time import sleep
 
-from PiVideoCapture import PiVideoCapture
-from Robot import Robot
-from Motors import Motors
-
-from gpiozero import Motor
-
-from picamera.array import PiRGBArray
 from picamera import PiCamera
 
-import numpy as np
 import cv2
+import imutils
+
+from PiVideoCapture import PiVideoCapture
+
+from get_robot import get_claw_robot
+from PID import PID
+from helpers import map_range
+
+blue_lower = (80, 70, 0)
+blue_upper = (125, 255, 255)
 
 camera = PiCamera()
-camera.rotation = 180
-camera.framerate = 20
-camera.resolution = (192, 112)
+camera.vflip = True
+camera.hflip = True
 
-cap = PiVideoCapture(camera)
+# # Initialise the list of tracked points
+# points = deque(maxlen=10)
 
-sleep(0.5)
+vs = PiVideoCapture(camera)
 
-while True:
-    # left_motors = Motors([Motor(17, 27), Motor(12, 13)])
-    # right_motors = Motors([Motor(23,22),Motor(16,26)])
-    # robot = Robot(left_motors, right_motors)
+# Allow the camera time to warm up
+sleep(1)
 
-    image = cap.read()
-    cv2.imwrite("test.jpg", image)
+target = (100, 300)
+pos = (0, 0)
 
-    # Create a key that breaks the loop
-    key = cv2.waitKey(1) & 0xFF
+pid = PID(0.8, 0, 0)
 
-    # Convert the image to greyscale
-    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # Blur it
-    blurred = cv2.GaussianBlur(grayscale, (5, 5), 0)
-    # Get the threshold
-    _, threshold = cv2.threshold(
-        blurred,
-        100,
-        255,
-        cv2.THRESH_BINARY_INV
-    )
+robot = get_claw_robot()
 
-    # Erode to elimate unnecessary noise
-    eroded = cv2.erode(threshold, None, iterations=2)
-    # Dilate to restore some eroded parts of the image
-    dilated = cv2.dilate(eroded, None, iterations=2)
+try:
+    while True:
+        frame = vs.read()
 
-    # Find all the contours in the mask
-    _, contours, _ = cv2.findContours(
-        dilated.copy(),
-        1,
-        cv2.CHAIN_APPROX_NONE
-    )
+        frame = imutils.resize(frame, width=600)
 
-    # Find the geometic center on the x-axis of the
-    # largest contour and adjust power accordingly to
-    # recenter the camera on the geometic centre of the
-    # line.
-    if len(contours) > 0:
-        # Find the largest contour
-        c = max(contours, key = cv2.contourArea)
-        # Find the image moments of `c`
-        # Just a quick explainer (for myself, more than
-        # anything): an "moment" in this context is the
-        # weighted average of the intensities of all the
-        # pixels in an image. It seems to be a way to
-        # find the most intense areas. I don't know
-        # a terribly large amount about them myself,
-        # I figured them out enough to write this code.
-        # See
-        # https://stackoverflow.com/questions/22470902#22472044
-        # and
-        # https://en.wikipedia.org/wiki/Image_moment
-        # for more information.
-        M = cv2.moments(c)
+        frame = frame[200:400, 0:600]
 
-        # Find the geometric centre (centroid) on the
-        # x-axis using the image moments we previously
-        # calculated.
-        cx = int(M["m10"] / M["m00"])
+        blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
-        if cx >= 150:
-            print("Left!")
-            # robot.go(-1, 1)
-        elif cx < 150 and cx > 40:
-            print("Right!")
-            # robot.go(1, -1)
-        elif cx <= 40:
-            print("Keep on driving... 🐟🚗")
-            # robot.go(0.7, 0.7)
-        
-        # Stop if "q" is pressed
-        if key == ord("q"):
-            break
-        
-        # We need to do this to prevent the buffer
-        # from overflowing. If we don't do this,
-        # the result is a crash.
-        cap.clear_buffer()
+        mask = cv2.inRange(hsv, blue_lower, blue_upper)
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=2)
 
-        # Wait a bit
-        sleep(0.1)
+        # Find the countours (jargon for "outlines") in the
+        # mask and use it to compute the centre of the ball.
+        contours = cv2.findContours(
+            mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = imutils.grab_contours(contours)
+        center = None
+
+        if len(contours) > 0:
+            # Find the largest countour in the mask, then
+            # use it to compute the minimum enclosing circle
+            # and centroid
+            c = max(contours, key=cv2.contourArea)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            M = cv2.moments(c)
+            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+
+            is_in_range = (center[0] > 110 and center[0]
+                           < 320, center[1] > 360)
+
+            pos = center
+
+            print(pos)
+
+            if radius > 10:
+                cv2.circle(frame, (int(x), int(y)),
+                           int(radius), (0, 255, 255), 2)
+                cv2.circle(frame, center, 5, (0, 0, 255), -1)
+
+        update = map_range(
+            pid.update(target[0] - pos[0]),
+            -360,
+            70,
+            -1,
+            1
+        ) * -1
+        print(update)
+        print(pid.update(target[0] - pos[0]))
+        robot.run(update, 0.3)
+
+        cv2.imwrite("./test.jpg", frame)
+finally:
+    robot.shutdown()

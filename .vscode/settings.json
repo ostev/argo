@@ -2,12 +2,12 @@
     "cSpell.words": [
         "wfile"
     ],
-    "python.formatting.provider": "none",
+    "python.formatting.provider": "autopep8",
     "remote.autoForwardPorts": false,
     "files.watcherExclude": {
         "**/env/*/**": true
     },
     "python.pythonPath": "env/bin/python",
     "python.linting.enabled": false,
-    "editor.formatOnSave": false
+    // "editor.formatOnSave": false
 }

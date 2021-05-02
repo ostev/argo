@@ -11,16 +11,9 @@ class PiVideoCapture(object):
 
     def read(self, format="bgr"):
         """
-        Grab a numpy array of frame data from the camera
-
-        Make sure to call `clear_buffer` when you're done.
+        Grab a `numpy` array of frame data from the camera
         """
         self.camera.capture(self.rawCapture, format)
-        return self.rawCapture.array
-
-    def clear_buffer(self):
-        """
-        This must be called after a read to clear the camera's
-        buffer, otherwise a crash will result.
-        """
+        frame = self.rawCapture.array
         self.rawCapture.truncate(0)
+        return frame

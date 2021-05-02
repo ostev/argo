@@ -99,7 +99,8 @@ class WebControlHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     webServer = HTTPServer((hostName, serverPort), WebControlHandler)
-    print("\n%sServer started at http://%s:%s%s" % (GREEN, hostName, serverPort, RESET))
+    print("\n%sServer started at http://%s:%s%s" %
+          (GREEN, hostName, serverPort, RESET))
 
     try:
         webServer.serve_forever()
