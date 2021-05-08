@@ -1,5 +1,6 @@
 from time import time
 
+
 class PID:
     def __init__(self, kP=1, kI=0, kD=0):
         (self.kP, self.kI, self.kD) = (kP, kI, kD)
@@ -10,7 +11,7 @@ class PID:
         self.previous_error = 0
 
         (self.cP, self.cI, self.cD) = (0, 0, 0)
-    
+
     def update(self, error):
         self.current_time = time()
         delta_time = self.current_time - self.previous_time
@@ -29,3 +30,6 @@ class PID:
             self.kI * self.cI,
             self.kD * self.cD
         ])
+
+    def reset(self):
+        self.__init__(self.kP, self.kI, self.kD)

@@ -1,3 +1,4 @@
+from typing import Optional
 from collections import deque
 from PiVideoCapture import PiVideoCapture
 import numpy as np
@@ -60,6 +61,53 @@ class Mode(Enum):
     deposit_blue = 5
 
 
+def line_steering(pid: PID, frame) -> Optional[float]:
+    pos = (0, 0)
+
+    blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+    hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+
+    mask = cv2.inRange(hsv, blue_lower, blue_upper)
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+
+    # Find the countours (jargon for "outlines") in the
+    # mask and use it to compute the centre of the ball.
+    contours = cv2.findContours(
+        mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = imutils.grab_contours(contours)
+    center = None
+
+    if len(contours) > 0:
+        # Find the largest countour in the mask, then
+        # use it to compute the minimum enclosing circle
+        # and centroid
+        c = max(contours, key=cv2.contourArea)
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
+        M = cv2.moments(c)
+        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+
+        pos = center
+    else:
+        return None
+
+    update = map_range(
+        pid.update(target[0] - pos[0]),
+        -120,
+        120,
+        -1,
+        1
+    ) * -1
+
+    if radius > 10:
+        cv2.circle(frame, (int(x), int(y)),
+                   int(radius), (0, 255, 255), 2)
+        cv2.circle(frame, center, 5, (0, 0, 255), -1)
+    cv2.imwrite("./test.jpg", frame)
+
+    return update
+
+
 class Main(object):
     def shutdown(self):
         self.robot.shutdown()
@@ -68,8 +116,8 @@ class Main(object):
     def main(self):
         self.robot = get_claw_gyro_robot()
         is_in_range = (False, False)
-        pos = (0, 0)
-        target = (220, 335)
+        self.pos = (0, 0)
+        target = (117, 174)
 
         self.ticks_since_grabbed = 0
 
@@ -77,7 +125,9 @@ class Main(object):
 
         pid = PID(0.7, 0, 0)
 
-        camera = PiCamera()
+        pid2 = PID(0.8, 0, 0)
+
+        camera = PiCamera(resolution=(320, 208))
         camera.vflip = True
         camera.hflip = True
 
@@ -100,7 +150,6 @@ class Main(object):
         while True:
             frame = vs.read()
 
-            frame = imutils.resize(frame, width=600)
             blurred = cv2.GaussianBlur(frame, (11, 11), 0)
             hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
@@ -133,10 +182,9 @@ class Main(object):
                     is_in_range = (
                         center[0] > 110 and center[0] < 320, center[1] > 360)
 
-                    global pos
-                    pos = center
+                    self.pos = center
 
-                    print(pos)
+                    print(self.pos)
 
                     # print(center)
 
@@ -174,11 +222,17 @@ class Main(object):
                 sleep(0.07)
                 self.robot.rotate_to(0, 0.4)
                 self.robot.stop()
-                sleep(0.07)
-                self.robot.run_dps(0, 300)
-                sleep(1)
 
-                self.robot.stop()
+                while True:
+                    frame = vs.read()
+                    steering = line_steering(pid2, frame)
+
+                    if steering != None:
+                        self.robot.run(steering, 0.3)
+                    else:
+                        self.robot.stop()
+                        break
+
                 self.robot.claw.open()
 
                 sleep(0.5)
@@ -190,6 +244,9 @@ class Main(object):
                 self.robot.rotate_to(125, 0.7, 1)
                 self.robot.run_dps(0, 600)
                 sleep(1.6)
+
+                pid.reset()
+                pid2.reset()
 
             elif mode == Mode.deposit_red:
                 self.robot.stop()
@@ -247,7 +304,7 @@ class Main(object):
                 self.robot.claw.open()
 
                 update = map_range(
-                    pid.update(target[0] - pos[0]),
+                    pid.update(target[0] - self.pos[0]),
                     -130,
                     130,
                     -1,
