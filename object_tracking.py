@@ -16,7 +16,7 @@ from helpers import map_range
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
-green_lower = (50, 70, 0)
+green_lower = (40, 70, 0)
 green_upper = (100, 255, 255)
 
 red_lower = (160, 70, 0)
@@ -61,8 +61,9 @@ class Mode(Enum):
     deposit_blue = 5
 
 
-def line_steering(pid: PID, frame) -> Optional[float]:
+def line_steering(pid: PID, frame, targetX: int) -> Optional[float]:
     pos = (0, 0)
+    target = (targetX, 130)
 
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -117,7 +118,7 @@ class Main(object):
         self.robot = get_claw_gyro_robot()
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 174)
+        target = (117, 135)
 
         self.ticks_since_grabbed = 0
 
@@ -180,7 +181,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 110 and center[0] < 320, center[1] > 360)
+                        center[0] > 60 and center[0] < 170, center[1] > 130)
 
                     self.pos = center
 
@@ -192,7 +193,7 @@ class Main(object):
                         cv2.circle(frame, (int(x), int(y)),
                                    int(radius), (0, 255, 255), 2)
                         cv2.circle(frame, center, 5, (0, 0, 255), -1)
-
+            print(is_in_range)
             if is_in_range[1] and is_in_range[0]:
                 if mode_is_pick_up(mode):
 
@@ -217,7 +218,7 @@ class Main(object):
 
                 self.robot.rotate_to(90, 0.4, 0)
                 self.robot.run_dps(0, -600)
-                sleep(2.1)
+                sleep(2.3)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.rotate_to(0, 0.4)
@@ -225,7 +226,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame)
+                    steering = line_steering(pid2, frame, 117)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -241,9 +242,9 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(0.75)
-                self.robot.rotate_to(125, 0.7, 1)
+                self.robot.rotate_to(127, 0.7, 1)
                 self.robot.run_dps(0, 600)
-                sleep(1.6)
+                sleep(1.2)
 
                 pid.reset()
                 pid2.reset()
@@ -261,9 +262,18 @@ class Main(object):
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
-                sleep(2.45)
+                sleep(0.3)
 
-                self.robot.stop()
+                while True:
+                    frame = vs.read()
+                    steering = line_steering(pid2, frame, 150)
+
+                    if steering != None:
+                        self.robot.run(steering, 0.3)
+                    else:
+                        self.robot.stop()
+                        break
+
                 self.robot.claw.open()
 
                 sleep(0.5)
@@ -289,9 +299,18 @@ class Main(object):
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
-                sleep(4.32)
+                sleep(1)
 
-                self.robot.stop()
+                while True:
+                    frame = vs.read()
+                    steering = line_steering(pid2, frame, 40)
+
+                    if steering != None:
+                        self.robot.run(steering, 0.3)
+                    else:
+                        self.robot.stop()
+                        break
+
                 self.robot.claw.open()
 
                 sleep(0.5)
@@ -311,7 +330,7 @@ class Main(object):
                     1
                 ) * -1
                 print(update)
-                self.robot.run(update, 0.1)
+                self.robot.run(update, 0.3)
 
             # points.appendleft(center)
 
