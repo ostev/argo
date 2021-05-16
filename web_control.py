@@ -10,7 +10,7 @@ from get_robot import get_two_wheel_robot
 
 from helpers import switch, GREEN, CYAN, RESET, default, map_range
 
-hostName = "192.168.1.114"
+hostName = "192.168.1.113"
 serverPort = 80
 
 requestRegex = re.compile(r"/set/(speed|angle)/(-?\d\d?\d?)")
