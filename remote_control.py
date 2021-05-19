@@ -5,7 +5,7 @@ from gpiozero import Motor
 
 from Controller import Controller
 from get_robot import get_robot, get_claw_robot, get_noop_robot
-import Gamepad
+from Gamepad import EventType
 from helpers import map_range, clamp, RESET, GREEN
 
 # Gamepad settings
@@ -26,11 +26,13 @@ right_control = "RB"
 
 claw_control = "LT"
 
+
 class Mode(Enum):
     noop = 0
     steer = 1
     claw = 2
     claw_partial = 3
+
 
 class Main(object):
     def __init__(self):
@@ -45,22 +47,14 @@ class Main(object):
         self.robot = get_noop_robot()
 
     def main(self):
+        gamepad = Controller()
 
-        # Wait for a connection
-        if not Gamepad.available():
-            print("%sPlease connect your gamepad...%s\n" % (GREEN, RESET))
-            while not Gamepad.available():
-                sleep(1.0)
-        gamepad = gamepadType()
-        print("%sGamepad connected...%s\n" % (GREEN, RESET))
-
-        # Handle joystick updates one at a time
-        while gamepad.isConnected():
+        while True:
             # Wait for the next event
-            eventType, control, value = gamepad.getNextEvent()
+            eventType, control, value = gamepad.get_next_event()
 
             # Determine the type
-            if eventType == "BUTTON":
+            if eventType == EventType.key:
                 # Button changed
                 if control == exit_control:
                     # Exit button (event on press)
@@ -83,13 +77,13 @@ class Main(object):
                         print("Changing to steer mode...")
                         self.mode = Mode.steer
                         self.robot = get_robot()
-                
+
                 elif control == change_mode_to_noop_control:
                     if not (self.mode == Mode.noop):
                         print("Changing to no-op mode...")
                         self.mode = Mode.noop
                         self.robot = get_noop_robot()
-                
+
                 elif control == change_mode_to_claw_partial_control:
                     if not (self.mode == Mode.claw_partial):
                         print("Changing to partial-close claw mode...")
@@ -118,8 +112,7 @@ class Main(object):
                     else:
                         self.robot.run(self.steering, self.throttle)
 
-
-            elif eventType == "AXIS":
+            elif eventType == EventType.axis:
                 # Joystick changed
                 if control == left_speed_control:
                     self.throttle = value * -1
