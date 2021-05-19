@@ -143,7 +143,7 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(90, 0.7)
+        self.robot.rotate_to(180, 0.7)
         self.robot.run_dps(0, 700)
         sleep(2)
         self.robot.stop()
@@ -216,12 +216,12 @@ class Main(object):
 
                 self.robot.claw.close()
 
-                self.robot.rotate_to(90, 0.4, 0)
+                self.robot.rotate_to(0, 0.4, 0)
                 self.robot.run_dps(0, -600)
                 sleep(2.3)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(0, 0.4)
+                self.robot.rotate_to(90, 0.4)
                 self.robot.stop()
 
                 while True:
@@ -242,7 +242,7 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(0.75)
-                self.robot.rotate_to(127, 0.7, 1)
+                self.robot.rotate_to(217, 0.7, 1)
                 self.robot.run_dps(0, 600)
                 sleep(1.2)
 
@@ -253,12 +253,12 @@ class Main(object):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(90, 0.4)
+                self.robot.rotate_to(180, 0.4)
                 self.robot.run_dps(0, -700)
                 sleep(2.38)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(0, 0.4)
+                self.robot.rotate_to(90, 0.4)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
@@ -282,7 +282,7 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(1.52)
-                self.robot.rotate_to(132, 0.7, 1)
+                self.robot.rotate_to(222, 0.7, 1)
                 self.robot.run_dps(0, 600)
                 sleep(2)
 
@@ -290,12 +290,12 @@ class Main(object):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(90, 0.4)
+                self.robot.rotate_to(180, 0.4)
                 self.robot.run_dps(0, -600)
                 sleep(1.24)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(0, 0.4)
+                self.robot.rotate_to(90, 0.4)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
