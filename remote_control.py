@@ -1,8 +1,6 @@
 from time import sleep
 from enum import Enum
 
-from gpiozero import Motor
-
 from Controller import Controller
 from get_robot import get_robot, get_claw_robot, get_noop_robot
 from Gamepad import EventType
