@@ -143,9 +143,9 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(180, 0.7)
-        self.robot.run_dps(0, 700)
-        sleep(2)
+        self.robot.rotate_to(135, 0.7)
+        self.robot.run_dps(0, 750)
+        sleep(1.6)
         self.robot.stop()
 
         while True:
@@ -181,7 +181,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 60 and center[0] < 170, center[1] > 130)
+                        center[0] > 60 and center[0] < 170, center[1] > 185)
 
                     self.pos = center
 
@@ -216,7 +216,6 @@ class Main(object):
 
                 self.robot.claw.close()
 
-                self.robot.rotate_to(0, 0.4, 0)
                 self.robot.run_dps(0, -600)
                 sleep(2.3)
                 self.robot.stop()
@@ -226,7 +225,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 117)
+                    steering = line_steering(pid2, frame, 112)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -266,7 +265,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 150)
+                    steering = line_steering(pid2, frame, 170)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -299,18 +298,22 @@ class Main(object):
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
-                sleep(1)
+                sleep(2.5)
 
-                while True:
-                    frame = vs.read()
-                    steering = line_steering(pid2, frame, 40)
+                # while True:
+                #     frame = vs.read()
+                #     steering = line_steering(pid2, frame, 40)
+                #     unseen_ticks = 0
 
-                    if steering != None:
-                        self.robot.run(steering, 0.3)
-                    else:
-                        self.robot.stop()
-                        break
-
+                #     if steering != None:
+                #         self.robot.run(steering, 0.3)
+                #     else:
+                #         if unseen_ticks > 1:
+                #             self.robot.stop()
+                #             break
+                #         else:
+                #             self.robot.turn_left(0.2)
+                self.robot.stop()
                 self.robot.claw.open()
 
                 sleep(0.5)
