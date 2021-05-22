@@ -7,7 +7,6 @@
     "files.watcherExclude": {
         "**/env/*/**": true
     },
-    "python.pythonPath": "/bin/python3",
     "python.linting.enabled": false,
     // "editor.formatOnSave": false
 }
