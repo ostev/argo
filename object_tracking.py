@@ -119,12 +119,6 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
         1
     ) * -1
 
-    if radius > 10:
-        cv2.circle(frame, (int(x), int(y)),
-                   int(radius), (0, 255, 255), 2)
-        cv2.circle(frame, center, 5, (0, 0, 255), -1)
-    cv2.imwrite("./test.jpg", frame)
-
     return update
 
 
@@ -187,7 +181,6 @@ class Main(object):
                     mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 contours = imutils.grab_contours(contours)
                 center = None
-                print(mode)
 
                 if len(contours) > 0:
                     # Find the largest countour in the mask, then
@@ -204,30 +197,17 @@ class Main(object):
 
                     self.pos = center
 
-                    print(self.pos)
-
-                    # print(center)
-
-                    if radius > 10:
-                        cv2.circle(frame, (int(x), int(y)),
-                                   int(radius), (0, 255, 255), 2)
-                        cv2.circle(frame, center, 5, (0, 0, 255), -1)
-            print(is_in_range)
-
             if is_in_range[1] and is_in_range[0]:
                 if mode_is_pick_up(mode):
-
-                    print(mode)
 
                     self.robot.claw.close()
                     self.robot.stop()
 
                     self.ticks_since_grabbed += 1
-                    print(self.ticks_since_grabbed)
 
                     if self.ticks_since_grabbed > 1:
                         mode = change_mode(mode)
-                        print(str(mode) + "b")
+
                         is_in_range = (False, False)
                         self.ticks_since_grabbed = 0
 
@@ -349,12 +329,8 @@ class Main(object):
                     -1,
                     1
                 ) * -1
-                print(update)
+
                 self.robot.run(update, 0.3)
-
-            # points.appendleft(center)
-
-            cv2.imwrite("./test.jpg", frame)
 
 
 if __name__ == "__main__":
