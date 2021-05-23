@@ -1,7 +1,5 @@
-from typing import Optional
-from collections import deque
+from typing import Optional, Tuple
 from PiVideoCapture import PiVideoCapture
-import numpy as np
 from picamera import PiCamera
 import cv2
 import imutils
@@ -25,50 +23,71 @@ red_upper = (180, 255, 255)
 blue_lower = (80, 70, 0)
 blue_upper = (125, 255, 255)
 
-
-def change_mode(mode):
-    if mode == Mode.pick_up_green:
-        return Mode.deposit_green
-    elif mode == Mode.pick_up_red:
-        return Mode.deposit_red
-    elif mode == Mode.pick_up_blue:
-        return Mode.deposit_blue
+yellow_lower = (10, 70, 0)
+yellow_upper = (25, 255, 255)
 
 
-def get_mask(hsv, mode):
-    if mode == Mode.pick_up_green:
-        return cv2.inRange(hsv, green_lower, green_upper)
-    elif mode == Mode.pick_up_red:
-        return cv2.inRange(hsv, red_lower, red_upper)
-    elif mode == Mode.pick_up_blue:
-        return cv2.inRange(hsv, blue_lower, blue_upper)
+class Color(Enum):
+    green = 0
+    red = 1
+    blue = 2
+    yellow = 3
+
+
+RawColor = Tuple[int, int, int]
+
+ColorBounds = Tuple[RawColor, RawColor]
+
+
+def color_bounds(color: Color) -> ColorBounds:
+    if color == Color.green:
+        return (green_lower, green_upper)
+    elif color == Color.red:
+        return (red_lower, red_upper)
+    elif color == Color.blue:
+        return (blue_lower, blue_upper)
     else:
-        raise ValueError("Incorrect mode")
+        return (yellow_lower, yellow_upper)
 
 
-def mode_is_pick_up(mode):
-    return mode == Mode.pick_up_green \
-        or mode == Mode.pick_up_red \
-        or mode == Mode.pick_up_blue
+class Intention(Enum):
+    pick_up = 0
+    deposit = 1
 
 
-class Mode(Enum):
-    pick_up_green = 0
-    deposit_green = 1
-    pick_up_red = 2
-    deposit_red = 3
-    pick_up_blue = 4
-    deposit_blue = 5
+Mode = Tuple[Color, Intention]
 
 
-def line_steering(pid: PID, frame, targetX: int) -> Optional[float]:
+def mode_is_pick_up(mode: Mode):
+    return mode[1] == Intention.pick_up
+
+
+def change_mode(mode: Mode):
+    if mode[1] == Intention.deposit:
+        return (Color(mode[0].value + 1), Intention.pick_up)
+    else:
+        return (mode[0], Intention.deposit)
+
+
+def get_mask(hsv, color):
+    if color == Color.green:
+        return cv2.inRange(hsv, green_lower, green_upper)
+    elif color == Color.red:
+        return cv2.inRange(hsv, red_lower, red_upper)
+    elif color == Color.blue:
+        return cv2.inRange(hsv, blue_lower, blue_upper)
+    elif color == Color.yellow:
+        return cv2.inRange(hsv, yellow_lower, yellow_upper)
+
+
+def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
     pos = (0, 0)
     target = (targetX, 130)
 
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
-    mask = cv2.inRange(hsv, blue_lower, blue_upper)
+    mask = get_mask(hsv, color)
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
 
@@ -122,7 +141,7 @@ class Main(object):
 
         self.ticks_since_grabbed = 0
 
-        mode = Mode.pick_up_green
+        mode = (Color.green, Intention.pick_up)
 
         pid = PID(0.7, 0, 0)
 
@@ -143,9 +162,9 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(135, 0.7)
+        self.robot.rotate_to(140, 0.7)
         self.robot.run_dps(0, 750)
-        sleep(1.6)
+        sleep(1.3)
         self.robot.stop()
 
         while True:
@@ -157,7 +176,7 @@ class Main(object):
             if mode_is_pick_up(mode):
                 # Construct a mask for the relevant color, then dilate
                 # and erode the image to remove any remaining small blobs.
-                mask = get_mask(hsv, mode)
+                mask = get_mask(hsv, mode[0])
 
                 mask = cv2.erode(mask, None, iterations=2)
                 mask = cv2.dilate(mask, None, iterations=2)
@@ -194,6 +213,7 @@ class Main(object):
                                    int(radius), (0, 255, 255), 2)
                         cv2.circle(frame, center, 5, (0, 0, 255), -1)
             print(is_in_range)
+
             if is_in_range[1] and is_in_range[0]:
                 if mode_is_pick_up(mode):
 
@@ -211,7 +231,7 @@ class Main(object):
                         is_in_range = (False, False)
                         self.ticks_since_grabbed = 0
 
-            if mode == Mode.deposit_green:
+            if mode == (Color.green, Intention.deposit):
                 self.robot.stop()
 
                 self.robot.claw.close()
@@ -225,7 +245,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 112)
+                    steering = line_steering(pid2, frame, 106)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -237,18 +257,18 @@ class Main(object):
 
                 sleep(0.5)
 
-                mode = Mode.pick_up_red
+                mode = change_mode(mode)
 
                 self.robot.run_dps(0, -700)
                 sleep(0.75)
-                self.robot.rotate_to(217, 0.7, 1)
+                self.robot.rotate_to(210, 0.7, 1)
                 self.robot.run_dps(0, 600)
                 sleep(1.2)
 
                 pid.reset()
                 pid2.reset()
 
-            elif mode == Mode.deposit_red:
+            elif mode == (Color.red, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
@@ -265,7 +285,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 170)
+                    steering = line_steering(pid2, frame, 195)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -277,7 +297,7 @@ class Main(object):
 
                 sleep(0.5)
 
-                mode = Mode.pick_up_blue
+                mode = change_mode(mode)
 
                 self.robot.run_dps(0, -700)
                 sleep(1.52)
@@ -285,7 +305,7 @@ class Main(object):
                 self.robot.run_dps(0, 600)
                 sleep(2)
 
-            elif mode == Mode.deposit_blue:
+            elif mode == (Color.blue, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
@@ -300,19 +320,16 @@ class Main(object):
                 self.robot.run_dps(0, 700)
                 sleep(2.5)
 
-                # while True:
-                #     frame = vs.read()
-                #     steering = line_steering(pid2, frame, 40)
-                #     unseen_ticks = 0
+                while True:
+                    frame = vs.read()
+                    steering = line_steering(pid2, frame, 104, Color.yellow)
 
-                #     if steering != None:
-                #         self.robot.run(steering, 0.3)
-                #     else:
-                #         if unseen_ticks > 1:
-                #             self.robot.stop()
-                #             break
-                #         else:
-                #             self.robot.turn_left(0.2)
+                    if steering != None:
+                        self.robot.run(steering, 0.3)
+                    else:
+                        self.robot.stop()
+                        break
+
                 self.robot.stop()
                 self.robot.claw.open()
 
