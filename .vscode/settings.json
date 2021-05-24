@@ -1,7 +1,4 @@
 {
-    "cSpell.words": [
-        "wfile"
-    ],
     "python.formatting.provider": "autopep8",
     "remote.autoForwardPorts": false,
     "files.watcherExclude": {
