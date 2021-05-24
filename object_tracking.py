@@ -4,7 +4,7 @@ from picamera import PiCamera
 import cv2
 import imutils
 from time import sleep
-import sys
+import argparse
 from enum import Enum
 
 from get_robot import get_claw_gyro_robot
@@ -127,7 +127,7 @@ class Main(object):
         self.robot.shutdown()
         sys.exit()
 
-    def main(self):
+    def main(self, is_debug=False):
         self.robot = get_claw_gyro_robot()
         is_in_range = (False, False)
         self.pos = (0, 0)
@@ -193,7 +193,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 60 and center[0] < 170, center[1] > 185)
+                        center[0] > 25 and center[0] < 179, center[1] > 185)
 
                     self.pos = center
 
@@ -334,9 +334,16 @@ class Main(object):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-d", "--debug", help="Enables debug mode, including logging and debug images.")
+
+    args = parser.parse_args()
+
     try:
         main = Main()
-        main.main()
+        main.main(args.debug)
     finally:
         print("Exiting...")
         main.robot.shutdown()
