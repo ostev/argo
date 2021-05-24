@@ -123,10 +123,6 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
 
 
 class Main(object):
-    def shutdown(self):
-        self.robot.shutdown()
-        sys.exit()
-
     def main(self, is_debug=False):
         self.robot = get_claw_gyro_robot()
         is_in_range = (False, False)
