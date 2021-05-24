@@ -233,7 +233,7 @@ class Main(object):
                         self.robot.stop()
                         break
 
-                self.robot.claw.open()
+                self.robot.claw.open_partial()
 
                 sleep(0.5)
 
@@ -242,6 +242,7 @@ class Main(object):
                 self.robot.run_dps(0, -700)
                 sleep(0.75)
                 self.robot.rotate_to(210, 0.7, 1)
+                self.robot.claw.open()
                 self.robot.run_dps(0, 600)
                 sleep(1.2)
 
@@ -273,7 +274,7 @@ class Main(object):
                         self.robot.stop()
                         break
 
-                self.robot.claw.open()
+                self.robot.claw.open_partial()
 
                 sleep(0.5)
 
@@ -282,6 +283,7 @@ class Main(object):
                 self.robot.run_dps(0, -700)
                 sleep(1.52)
                 self.robot.rotate_to(222, 0.7, 1)
+                self.robot.claw.open()
                 self.robot.run_dps(0, 600)
                 sleep(2)
 
@@ -311,9 +313,13 @@ class Main(object):
                         break
 
                 self.robot.stop()
-                self.robot.claw.open()
+                self.robot.claw.open_partial()
 
                 sleep(0.5)
+
+                self.robot.run_dps(0, -700)
+                sleep(1)
+                self.robot.stop()
 
                 break
 
