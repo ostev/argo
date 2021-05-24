@@ -7,6 +7,5 @@
     "files.watcherExclude": {
         "**/env/*/**": true
     },
-    "python.linting.enabled": false,
-    // "editor.formatOnSave": false
+    "python.linting.enabled": false
 }
