@@ -208,6 +208,9 @@ class BrickPiClaw(Claw):
     def open(self):
         self.bp.set_motor_position(self.port, self.open_position)
 
+    def open_partial(self):
+        self.bp.set_motor_position(self.port, self.open_position - 80)
+
     def set_position(self, pos: int):
         self.bp.set_motor_position(self.port, self.open_position - pos)
 
