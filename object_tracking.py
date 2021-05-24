@@ -193,7 +193,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 40 and center[0] < 164, center[1] > 185)
+                        center[0] > 50 and center[0] < 154, center[1] > 185)
 
                     self.pos = center
 
