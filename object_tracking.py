@@ -135,7 +135,7 @@ class Main(object):
 
         pid = PID(0.7, 0, 0)
 
-        pid2 = PID(0.8, 0, 0)
+        pid2 = PID(0.8, 0.05, 0)
 
         camera = PiCamera(resolution=(320, 208))
         camera.vflip = True
