@@ -195,20 +195,21 @@ class BrickPiClaw(Claw):
         self.calibrate()
 
     def calibrate(self):
-        self.close()
+        self.bp.set_motor_power(self.port, -40)
         sleep(0.4)
-        self.closed_position = self.bp.get_motor_encoder(self.port)
-        self.open_position = self.closed_position - 50
+        self.shutdown()
+        self.closed_position = self.bp.get_motor_encoder(self.port) + 40
+        self.open_position = self.closed_position + 130
         self.open()
 
     def close(self):
-        self.bp.set_motor_power(self.port, 40)
+        self.bp.set_motor_position(self.port, self.closed_position)
 
     def open(self):
         self.bp.set_motor_position(self.port, self.open_position)
 
     def set_position(self, pos: int):
-        self.bp.set_motor_position(self.port, self.open_position + pos)
+        self.bp.set_motor_position(self.port, self.open_position - pos)
 
     def shutdown(self):
         self.bp.set_motor_power(self.port, 0)
