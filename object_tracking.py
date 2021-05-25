@@ -4,7 +4,6 @@ from picamera import PiCamera
 import cv2
 import imutils
 from time import sleep
-import argparse
 from enum import Enum
 
 from get_robot import get_claw_gyro_robot
@@ -108,6 +107,13 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         pos = center
+
+        # if radius > 10:
+        #     cv2.circle(frame, (int(x), int(y)),
+        #                int(radius), (0, 255, 255), 2)
+        #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
+
+        #     cv2.imwrite("./test.jpg", frame)
     else:
         return None
 
@@ -123,23 +129,24 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
 
 
 class Main(object):
-    def main(self, is_debug=False):
-        self.robot = get_claw_gyro_robot()
+    def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 135)
+        target = (117, 110)
 
         self.ticks_since_grabbed = 0
 
         mode = (Color.green, Intention.pick_up)
 
-        pid = PID(0.7, 0, 0)
+        pid = PID(0.7, 0.015, 0)
 
-        pid2 = PID(0.8, 0.05, 0)
+        pid2 = PID(0.8, 0.02, 0)
 
         camera = PiCamera(resolution=(320, 208))
         camera.vflip = True
         camera.hflip = True
+
+        self.robot = get_claw_gyro_robot()
 
         # # Initialise the list of tracked points
         # points = deque(maxlen=10)
@@ -189,9 +196,17 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 50 and center[0] < 154, center[1] > 185)
+                        center[0] > 50 and center[0] < 154, center[1] > 175)
 
                     self.pos = center
+                    print(self.pos)
+
+                    # if radius > 10:
+                    #     cv2.circle(frame, (int(x), int(y)),
+                    #                int(radius), (0, 255, 255), 2)
+                    #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
+
+            print(is_in_range)
 
             if is_in_range[1] and is_in_range[0]:
                 if mode_is_pick_up(mode):
@@ -221,10 +236,10 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 100)
+                    steering = line_steering(pid2, frame, 104)
 
                     if steering != None:
-                        self.robot.run(steering, 0.3)
+                        self.robot.run(steering, 0.5)
                     else:
                         self.robot.stop()
                         break
@@ -240,7 +255,7 @@ class Main(object):
                 self.robot.rotate_to(210, 0.7, 1)
                 self.robot.claw.open()
                 self.robot.run_dps(0, 600)
-                sleep(1.2)
+                sleep(0.5)
 
                 pid.reset()
                 pid2.reset()
@@ -251,7 +266,7 @@ class Main(object):
 
                 self.robot.rotate_to(180, 0.4)
                 self.robot.run_dps(0, -700)
-                sleep(2.38)
+                sleep(2)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.rotate_to(90, 0.4)
@@ -265,7 +280,7 @@ class Main(object):
                     steering = line_steering(pid2, frame, 200)
 
                     if steering != None:
-                        self.robot.run(steering, 0.3)
+                        self.robot.run(steering, 0.5)
                     else:
                         self.robot.stop()
                         break
@@ -281,7 +296,7 @@ class Main(object):
                 self.robot.rotate_to(222, 0.7, 1)
                 self.robot.claw.open()
                 self.robot.run_dps(0, 600)
-                sleep(2)
+                sleep(1)
 
             elif mode == (Color.blue, Intention.deposit):
                 self.robot.stop()
@@ -296,14 +311,14 @@ class Main(object):
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.run_dps(0, 700)
-                sleep(2.5)
+                sleep(1.6)
 
                 while True:
                     frame = vs.read()
                     steering = line_steering(pid2, frame, 104, Color.yellow)
 
                     if steering != None:
-                        self.robot.run(steering, 0.3)
+                        self.robot.run(steering, 0.5)
                     else:
                         self.robot.stop()
                         break
@@ -314,14 +329,12 @@ class Main(object):
                 sleep(0.5)
 
                 self.robot.run_dps(0, -700)
-                sleep(1)
+                sleep(0.7)
                 self.robot.stop()
 
                 break
 
             else:
-                ticks_since_grabbed = 0
-
                 self.robot.claw.open()
 
                 update = map_range(
@@ -332,20 +345,15 @@ class Main(object):
                     1
                 ) * -1
 
-                self.robot.run(update, 0.3)
+                self.robot.run(update, 0.6)
+
+                # cv2.imwrite("./test.jpg", frame)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "-d", "--debug", help="Enables debug mode, including logging and debug images.")
-
-    args = parser.parse_args()
-
     try:
         main = Main()
-        main.main(args.debug)
+        main.main()
     finally:
         print("Exiting...")
         main.robot.shutdown()
