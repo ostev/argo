@@ -1,10 +1,12 @@
 from typing import Optional, Tuple
 from time import sleep
-import threading
 
 from helpers import map_range, angle_to_tank, clamp
 
 from brickpi3 import BrickPi3
+
+from gpiozero.pins.pigpio import PiGPIOFactory
+from gpiozero import Servo
 
 
 class Claw(object):
@@ -328,3 +330,55 @@ class BrickPiTwoWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
             sleep(0.05)
 
         self.stop()
+
+
+class BrickPiOneWheelDriver(Driver):
+    def __init__(self):
+        self.bp = BrickPi3()
+
+        self.motor = BrickPiDriveMotor(self.bp.PORT_B, self.bp)
+        self.pivot = Servo(17, pin_factory=PiGPIOFactory())
+
+    def run(self, steering: float, throttle: float):
+        adjusted_throttle = 0
+        if steering > 0.4:
+            self.pivot.max()
+            adjusted_throttle = throttle
+        elif steering < -0.4:
+            self.pivot.max()
+            adjusted_throttle = throttle * -1
+
+        self.motors.run(adjusted_throttle)
+
+    """Can only go straight. `steering` ignored."""
+
+    def run_dps(self, steering, dps: int):
+        self.motors.run_dps(dps)
+
+    def stop(self):
+        self.run(0, 0)
+
+    def turn_left(self, throttle: float):
+        self.run(1, throttle)
+
+    def turn_right(self, throttle: float):
+        self.run(-1, throttle)
+
+    def shutdown(self):
+        self.motor.shutdown()
+        self.pivot.close()
+
+        self.bp.reset_all()
+
+
+class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
+    def __init__(self):
+        super().__init__()
+        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
+
+    def calibrate(self):
+        self.claw.calibrate()
+
+    def shutdown(self):
+        self.claw.shutdown()
+        super().shutdown()
