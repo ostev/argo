@@ -112,39 +112,12 @@ class BrickPiSteering(object):
         self.bp.set_motor_power(self.port, 0)
 
 
-class BrickPiThrottle(object):
-    def __init__(self, bp: BrickPi3):
-        self.bp = bp
-
-        self.throttle: float = 0
-        self.motors = (
-            BrickPiDriveMotor(self.bp.PORT_B, self.bp),
-            BrickPiDriveMotor(self.bp.PORT_C, self.bp),
-        )
-
-    def run(self, throttle: float):
-        for motor in self.motors:
-            motor.run(throttle)
-
-    def run_dps(self, dps: int):
-        for motor in self.motors:
-            motor.run_dps(dps)
-
-    def stop(self):
-        for motor in self.motors:
-            motor.stop()
-
-    def shutdown(self):
-        for motor in self.motors:
-            motor.shutdown()
-
-
 class BrickPiSteerDriver(Driver):
     def __init__(self):
         self.bp = BrickPi3()
 
-        self.steering = BrickPiSteering(self.bp.PORT_D, self.bp)
-        self.throttle = BrickPiThrottle(self.bp)
+        self.steering = BrickPiSteering(self.bp.PORT_C, self.bp)
+        self.throttle = BrickPiDriveMotor(self.bp.PORT_B, self.bp)
 
     def calibrate(self):
         self.steering.calibrate()
@@ -198,7 +171,7 @@ class BrickPiClaw(Claw):
 
     def calibrate(self):
         self.bp.set_motor_power(self.port, -40)
-        sleep(0.4)
+        sleep(0.8)
         self.shutdown()
         self.closed_position = self.bp.get_motor_encoder(self.port) + 40
         self.open_position = self.closed_position + 130
@@ -269,7 +242,7 @@ class BrickPiTwoWheelDriver(Driver):
 class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
     def __init__(self):
         super().__init__()
-        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
+        self.claw = BrickPiClaw(self.bp.PORT_C, self.bp)
 
     def calibrate(self):
         self.claw.calibrate()
@@ -304,10 +277,23 @@ class BrickPiGyro:
         return (data[0] - self.starting_angle, data[1])
 
 
+class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
+    def __init__(self):
+        super().__init__()
+        self.claw = BrickPiClaw(self.bp.PORT_C, self.bp)
+
+    def calibrate(self):
+        self.claw.calibrate()
+
+    def shutdown(self):
+        self.claw.shutdown()
+        super().shutdown()
+
+
 class BrickPiTwoWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
     def __init__(self):
         super().__init__()
-        self.gyro = BrickPiGyro(self.bp.PORT_3, self.bp)
+        self.gyro = BrickPiGyro(self.bp.PORT_4, self.bp)
 
     def calibrate(self):
         super().calibrate()
@@ -338,22 +324,31 @@ class BrickPiOneWheelDriver(Driver):
 
         self.motor = BrickPiDriveMotor(self.bp.PORT_B, self.bp)
         self.pivot = Servo(17, pin_factory=PiGPIOFactory())
+        self.pivot.min()
 
     def run(self, steering: float, throttle: float):
-        adjusted_throttle = 0
-        if steering > 0.4:
+        adjusted_throttle = throttle
+        if steering >= 0.4:
             self.pivot.max()
-            adjusted_throttle = throttle
-        elif steering < -0.4:
+        elif steering <= -0.4:
             self.pivot.max()
             adjusted_throttle = throttle * -1
+        else:
+            self.pivot.min()
 
-        self.motors.run(adjusted_throttle)
-
-    """Can only go straight. `steering` ignored."""
+        self.motor.run(adjusted_throttle)
 
     def run_dps(self, steering, dps: int):
-        self.motors.run_dps(dps)
+        adjusted_throttle = dps * -1
+        if steering >= 0.4:
+            self.pivot.max()
+        elif steering <= -0.4:
+            self.pivot.max()
+            adjusted_throttle = dps
+        else:
+            self.pivot.min()
+
+        self.motor.run_dps(dps)
 
     def stop(self):
         self.run(0, 0)
@@ -366,15 +361,18 @@ class BrickPiOneWheelDriver(Driver):
 
     def shutdown(self):
         self.motor.shutdown()
+
+        self.pivot.min()
+        sleep(0.5)
         self.pivot.close()
 
         self.bp.reset_all()
 
 
-class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
+class BrickPiOneWheelClawDriver(BrickPiOneWheelDriver):
     def __init__(self):
         super().__init__()
-        self.claw = BrickPiClaw(self.bp.PORT_D, self.bp)
+        self.claw = BrickPiClaw(self.bp.PORT_C, self.bp)
 
     def calibrate(self):
         self.claw.calibrate()
@@ -382,3 +380,31 @@ class BrickPiTwoWheelClawDriver(BrickPiTwoWheelDriver):
     def shutdown(self):
         self.claw.shutdown()
         super().shutdown()
+
+
+class BrickPiOneWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
+    def __init__(self):
+        super().__init__()
+        self.gyro = BrickPiGyro(self.bp.PORT_4, self.bp)
+
+    def calibrate(self):
+        super().calibrate()
+        self.gyro.calibrate()
+
+    def rotate_to(self, targetAngle: int, throttle: float, acceptableError=0):
+        while True:
+            current_angle = self.gyro.get()[0]
+            angle_left = current_angle - targetAngle
+
+            if angle_left >= (0 - acceptableError) \
+                    and angle_left <= acceptableError:
+                break
+            else:
+                if angle_left < 0:
+                    self.turn_right(throttle)
+                else:
+                    self.turn_left(throttle)
+
+            sleep(0.05)
+
+        self.stop()

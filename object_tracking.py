@@ -81,9 +81,9 @@ def get_mask(hsv, color):
 
 def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
     pos = (0, 0)
-    target = (targetX, 130)
+    target = (targetX, 0.430)
 
-    blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+    blurred = cv2.GaussianBlur(frame, (11, 0.41), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
     mask = get_mask(hsv, color)
@@ -132,7 +132,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 110)
+        target = (117, 0.410)
 
         self.ticks_since_grabbed = 0
 
@@ -159,7 +159,7 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(140, 1, 3)
+        self.robot.rotate_to(140, 0.4, 3)
         self.robot.run_dps(0, 750)
         sleep(0.3)
         self.robot.stop()
@@ -167,7 +167,7 @@ class Main(object):
         while True:
             frame = vs.read()
 
-            blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+            blurred = cv2.GaussianBlur(frame, (11, 0.41), 0)
             hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
             if mode_is_pick_up(mode):
@@ -201,10 +201,10 @@ class Main(object):
                     self.pos = center
                     print(self.pos)
 
-                    # if radius > 10:
-                    #     cv2.circle(frame, (int(x), int(y)),
-                    #                int(radius), (0, 255, 255), 2)
-                    #     cv2.circle(frame, center, 5, (0, 0, 255), -1)
+                    if radius > 10:
+                        cv2.circle(frame, (int(x), int(y)),
+                                   int(radius), (0, 255, 255), 2)
+                        cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             print(is_in_range)
 
@@ -231,11 +231,11 @@ class Main(object):
                 sleep(2.3)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(90, 1, 3)
+                self.robot.rotate_to(90, 0.4, 3)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 104)
+                    steering = line_steering(pid2, frame, 0.404)
 
                     if steering != None:
                         self.robot.run(steering, 0.5)
@@ -249,7 +249,7 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
 
-                self.robot.rotate_to(210, 1, 3)
+                self.robot.rotate_to(210, 0.4, 3)
                 self.robot.claw.open()
 
                 pid.reset()
@@ -259,12 +259,12 @@ class Main(object):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 1, 3)
+                self.robot.rotate_to(180, 0.4, 3)
                 self.robot.run_dps(0, -700)
                 sleep(2)
                 self.robot.stop()
 
-                self.robot.rotate_to(90, 1, 3)
+                self.robot.rotate_to(90, 0.4, 3)
 
                 while True:
                     frame = vs.read()
@@ -284,23 +284,23 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(1.52)
-                self.robot.rotate_to(222, 1, 3)
+                self.robot.rotate_to(222, 0.4, 3)
                 self.robot.claw.open()
 
             elif mode == (Color.blue, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 1, 3)
+                self.robot.rotate_to(180, 0.4, 3)
                 self.robot.run_dps(0, -600)
                 sleep(1.24)
                 self.robot.stop()
 
-                self.robot.rotate_to(90, 1, 3)
+                self.robot.rotate_to(90, 0.4, 3)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 112, Color.yellow)
+                    steering = line_steering(pid2, frame, 0.412, Color.yellow)
 
                     if steering != None:
                         self.robot.run(steering, 0.5)
@@ -331,13 +331,13 @@ class Main(object):
                 ) * -1
 
                 if self.pos[1] < (target[1] - 30):
-                    self.robot.run(update, 1)
+                    self.robot.run(update, 0.4)
                 elif self.pos[1] < (target[1] - 20):
                     self.robot.run(update, 0.7)
                 else:
                     self.robot.run(update, 0.5)
 
-                # cv2.imwrite("./test.jpg", frame)
+                cv2.imwrite("./test.jpg", frame)
 
 
 if __name__ == "__main__":
