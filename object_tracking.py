@@ -117,15 +117,20 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
     else:
         return None
 
-    update = map_range(
-        pid.update(target[0] - pos[0]),
-        -120,
-        120,
-        -1,
-        1
-    ) * -1
+    # update = map_range(
+    #     pid.update(target[0] - pos[0]),
+    #     -120,
+    #     120,
+    #     -1,
+    #     1
+    # ) * -1
 
-    return update
+    if pos[0] < target[0] - 50:
+        return -1
+    elif pos[0] > target[0] + 50:
+        return 1
+    else:
+        return 0
 
 
 class Main(object):
@@ -322,20 +327,19 @@ class Main(object):
             else:
                 self.robot.claw.open()
 
-                update = map_range(
-                    pid.update(target[0] - self.pos[0]),
-                    -130,
-                    130,
-                    -1,
-                    1
-                ) * -1
+                if self.pos[0] < target[0] - 50:
+                    update = -1
+                elif self.pos[0] > target[0] + 50:
+                    update = 1
+                else:
+                    update = 0
 
                 if self.pos[1] < (target[1] - 30):
-                    self.robot.run(update, 0.4)
-                elif self.pos[1] < (target[1] - 20):
                     self.robot.run(update, 0.7)
+                elif self.pos[1] < (target[1] - 20):
+                    self.robot.run(update, 0.4)
                 else:
-                    self.robot.run(update, 0.5)
+                    self.robot.run(update, 0.3)
 
                 cv2.imwrite("./test.jpg", frame)
 
