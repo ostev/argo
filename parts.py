@@ -340,9 +340,9 @@ class BrickPiOneWheelDriver(Driver):
 
     def run_dps(self, steering, dps: int):
         adjusted_throttle = dps * -1
-        if steering >= 0.4:
+        if steering >= 0.8:
             self.pivot.max()
-        elif steering <= -0.4:
+        elif steering <= -0.8:
             self.pivot.max()
             adjusted_throttle = dps
         else:
