@@ -327,12 +327,12 @@ class BrickPiOneWheelDriver(Driver):
         self.pivot.min()
 
     def run(self, steering: float, throttle: float):
-        adjusted_throttle = throttle
+        adjusted_throttle = throttle * -1
         if steering >= 0.4:
             self.pivot.max()
         elif steering <= -0.4:
             self.pivot.max()
-            adjusted_throttle = throttle * -1
+            adjusted_throttle = throttle
         else:
             self.pivot.min()
 
