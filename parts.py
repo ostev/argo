@@ -348,16 +348,16 @@ class BrickPiOneWheelDriver(Driver):
         else:
             self.pivot.min()
 
-        self.motor.run_dps(dps)
+        self.motor.run_dps(adjusted_throttle)
 
     def stop(self):
         self.run(0, 0)
 
     def turn_left(self, throttle: float):
-        self.run(1, throttle)
+        self.run(-0.9, throttle)
 
     def turn_right(self, throttle: float):
-        self.run(-1, throttle)
+        self.run(1, throttle)
 
     def shutdown(self):
         self.motor.shutdown()
@@ -382,7 +382,7 @@ class BrickPiOneWheelClawDriver(BrickPiOneWheelDriver):
         super().shutdown()
 
 
-class BrickPiOneWheelClawDriverWithGyro(BrickPiTwoWheelClawDriver):
+class BrickPiOneWheelClawDriverWithGyro(BrickPiOneWheelClawDriver):
     def __init__(self):
         super().__init__()
         self.gyro = BrickPiGyro(self.bp.PORT_4, self.bp)
