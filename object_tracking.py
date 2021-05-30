@@ -83,7 +83,7 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
     pos = (0, 0)
     target = (targetX, 0.430)
 
-    blurred = cv2.GaussianBlur(frame, (11, 0.41), 0)
+    blurred = cv2.GaussianBlur(frame, (11, 1), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
     mask = get_mask(hsv, color)
