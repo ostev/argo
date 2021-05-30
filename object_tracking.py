@@ -132,7 +132,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 0.410)
+        target = (117, 141)
 
         self.ticks_since_grabbed = 0
 
@@ -167,7 +167,7 @@ class Main(object):
         while True:
             frame = vs.read()
 
-            blurred = cv2.GaussianBlur(frame, (11, 0.41), 0)
+            blurred = cv2.GaussianBlur(frame, (11, 1), 0)
             hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
             if mode_is_pick_up(mode):
