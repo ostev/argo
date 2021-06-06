@@ -324,7 +324,7 @@ class BrickPiOneWheelDriver(Driver):
 
         self.motor = BrickPiDriveMotor(self.bp.PORT_B, self.bp)
         self.pivot = AngularServo(17, pin_factory=PiGPIOFactory())
-        self.pivot.min_pivot()
+        self.min_pivot()
 
     def run(self, steering: float, throttle: float):
         adjusted_throttle = throttle * -1
