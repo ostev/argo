@@ -6,7 +6,7 @@ from helpers import map_range, angle_to_tank, clamp
 from brickpi3 import BrickPi3
 
 from gpiozero.pins.pigpio import PiGPIOFactory
-from gpiozero import Servo
+from gpiozero import AngularServo
 
 
 class Claw(object):
@@ -323,8 +323,8 @@ class BrickPiOneWheelDriver(Driver):
         self.bp = BrickPi3()
 
         self.motor = BrickPiDriveMotor(self.bp.PORT_B, self.bp)
-        self.pivot = Servo(17, pin_factory=PiGPIOFactory())
-        self.pivot.min()
+        self.pivot = AngularServo(17, pin_factory=PiGPIOFactory())
+        self.pivot.min_pivot()
 
     def run(self, steering: float, throttle: float):
         adjusted_throttle = throttle * -1
@@ -334,9 +334,12 @@ class BrickPiOneWheelDriver(Driver):
             self.pivot.max()
             adjusted_throttle = throttle
         else:
-            self.pivot.min()
+            self.min_pivot()
 
         self.motor.run(adjusted_throttle)
+
+    def min_pivot(self):
+        self.pivot.angle = -40
 
     def run_dps(self, steering, dps: int):
         adjusted_throttle = dps * -1
@@ -346,7 +349,7 @@ class BrickPiOneWheelDriver(Driver):
             self.pivot.max()
             adjusted_throttle = dps
         else:
-            self.pivot.min()
+            self.min_pivot()
 
         self.motor.run_dps(adjusted_throttle)
 
@@ -362,7 +365,7 @@ class BrickPiOneWheelDriver(Driver):
     def shutdown(self):
         self.motor.shutdown()
 
-        self.pivot.min()
+        self.min_pivot()
         sleep(0.5)
         self.pivot.close()
 
