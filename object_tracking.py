@@ -166,7 +166,7 @@ class Main(object):
         self.robot.stop()
         self.robot.rotate_to(140, 0.4, 3)
         self.robot.run_dps(0, 750)
-        sleep(0.3)
+        sleep(1.5)
         self.robot.stop()
 
         while True:
@@ -334,12 +334,13 @@ class Main(object):
                 else:
                     update = 0
 
-                if self.pos[1] < (target[1] - 30):
-                    self.robot.run(update, 0.7)
-                elif self.pos[1] < (target[1] - 20):
-                    self.robot.run(update, 0.4)
-                else:
-                    self.robot.run(update, 0.3)
+                # if self.pos[1] < (target[1] - 30):
+                #     self.robot.run(update, 0.7)
+                # elif self.pos[1] < (target[1] - 20):
+                #     self.robot.run(update, 0.4)
+                # else:
+                #     self.robot.run(update, 0.3)
+                self.robot.run(update, 0.3)
 
                 cv2.imwrite("./test.jpg", frame)
 
