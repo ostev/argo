@@ -49,82 +49,84 @@ class Main(object):
 
         while True:
             # Wait for the next event
-            eventType, control, value = gamepad.get_next_event()
+            event = gamepad.get_next_event()
 
-            # Determine the type
-            if eventType == EventType.key:
-                # Button changed
-                if control == exit_control:
-                    # Exit button (event on press)
-                    if value:
-                        print("\n%sExiting...%s\n" % (GREEN, RESET))
-                        self.robot.shutdown()
-                        break
-                elif control == recalibrate_control:
-                    if value:
-                        print("%sRecalibrating...%s\n" % (GREEN, RESET))
-                        self.robot.calibrate()
-                elif control == change_mode_to_claw_control:
-                    if not (self.mode == Mode.claw):
-                        print("Changing to claw mode...")
-                        self.mode = Mode.claw
-                        self.robot = get_claw_robot()
-
-                elif control == change_mode_to_steer_control:
-                    if not (self.mode == Mode.steer):
-                        print("Changing to steer mode...")
-                        self.mode = Mode.steer
-                        self.robot = get_robot()
-
-                elif control == change_mode_to_noop_control:
-                    if not (self.mode == Mode.noop):
-                        print("Changing to no-op mode...")
-                        self.mode = Mode.noop
-                        self.robot = get_noop_robot()
-
-                elif control == change_mode_to_claw_partial_control:
-                    if not (self.mode == Mode.claw_partial):
-                        print("Changing to partial-close claw mode...")
-                        self.mode = Mode.claw_partial
-                        self.robot = get_claw_robot()
-
-                elif control == claw_control:
-                    if self.mode == Mode.claw_partial:
+            if event != None:
+                eventType, control, value = event
+                # Determine the type
+                if eventType == EventType.key:
+                    # Button changed
+                    if control == exit_control:
+                        # Exit button (event on press)
                         if value:
-                            self.robot.claw.set_position(100)
-                        else:
-                            self.robot.claw.open()
-                    else:
+                            print("\n%sExiting...%s\n" % (GREEN, RESET))
+                            self.robot.shutdown()
+                            break
+                    elif control == recalibrate_control:
                         if value:
-                            self.robot.claw.close()
+                            print("%sRecalibrating...%s\n" % (GREEN, RESET))
+                            self.robot.calibrate()
+                    elif control == change_mode_to_claw_control:
+                        if not (self.mode == Mode.claw):
+                            print("Changing to claw mode...")
+                            self.mode = Mode.claw
+                            self.robot = get_claw_robot()
+
+                    elif control == change_mode_to_steer_control:
+                        if not (self.mode == Mode.steer):
+                            print("Changing to steer mode...")
+                            self.mode = Mode.steer
+                            self.robot = get_robot()
+
+                    elif control == change_mode_to_noop_control:
+                        if not (self.mode == Mode.noop):
+                            print("Changing to no-op mode...")
+                            self.mode = Mode.noop
+                            self.robot = get_noop_robot()
+
+                    elif control == change_mode_to_claw_partial_control:
+                        if not (self.mode == Mode.claw_partial):
+                            print("Changing to partial-close claw mode...")
+                            self.mode = Mode.claw_partial
+                            self.robot = get_claw_robot()
+
+                    elif control == claw_control:
+                        if self.mode == Mode.claw_partial:
+                            if value:
+                                self.robot.claw.set_position(100)
+                            else:
+                                self.robot.claw.open()
                         else:
-                            self.robot.claw.open()
-                elif control == left_control:
-                    self.is_left = value
+                            if value:
+                                self.robot.claw.close()
+                            else:
+                                self.robot.claw.open()
+                    elif control == left_control:
+                        self.is_left = value
+                        if self.is_left:
+                            self.robot.turn_left(self.throttle)
+                    elif control == right_control:
+                        self.is_right = value
+                        if self.is_right:
+                            self.robot.turn_right(self.throttle)
+                        else:
+                            self.robot.run(self.steering, self.throttle)
+
+                elif eventType == EventType.axis:
+                    # Joystick changed
+                    if control == left_speed_control:
+                        self.throttle = value * -1
+                    elif control == steering_control:
+                        self.steering = value
+                    # print("Left speed: " + str(left_speed))
+                    # print("Right speed: " + str(right_speed))
+
                     if self.is_left:
                         self.robot.turn_left(self.throttle)
-                elif control == right_control:
-                    self.is_right = value
-                    if self.is_right:
+                    elif self.is_right:
                         self.robot.turn_right(self.throttle)
                     else:
                         self.robot.run(self.steering, self.throttle)
-
-            elif eventType == EventType.axis:
-                # Joystick changed
-                if control == left_speed_control:
-                    self.throttle = value * -1
-                elif control == steering_control:
-                    self.steering = value
-                # print("Left speed: " + str(left_speed))
-                # print("Right speed: " + str(right_speed))
-
-                if self.is_left:
-                    self.robot.turn_left(self.throttle)
-                elif self.is_right:
-                    self.robot.turn_right(self.throttle)
-                else:
-                    self.robot.run(self.steering, self.throttle)
 
 
 if __name__ == "__main__":

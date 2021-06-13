@@ -31,10 +31,10 @@ class Gamepad:
             pass
 
         value = (map_range(rawEvent.state,
-                          0,
-                          255,
-                          0,
-                          1) - 0.5) * 2\
+                           0,
+                           255,
+                           0,
+                           1) - 0.5) * 2\
             if type_ == EventType.axis \
             else (True if rawEvent.state == 1 else False)
 
@@ -45,7 +45,4 @@ class Gamepad:
 
         ev = self.transformRawEvent(rawEvents[0])
 
-        if ev == None:
-            return self.get_next_event()
-        else:
-            return ev
+        return ev
