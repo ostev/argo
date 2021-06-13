@@ -76,6 +76,8 @@ class BrickPiDriveMotor(object):
 
 class BrickPiSteering(object):
     def __init__(self, port: int, bp: BrickPi3):
+        super().__init__()
+
         self.bp = bp
 
         self.angle = 0.0
@@ -104,7 +106,7 @@ class BrickPiSteering(object):
         if angle > 1 or angle < -1:
             return
 
-        self.angle = map_range(angle, -1, 1, 0, self.max_angle)
+        self.angle = map_range(angle * -1, -1, 1, 0, self.max_angle)
 
         self.bp.set_motor_position(self.port, self.angle)
 
@@ -123,12 +125,12 @@ class BrickPiSteerDriver(Driver):
         self.steering.calibrate()
 
     def steer(self, steering: float):
-        angle = map_range(steering, -1, 1, -0.8, 0.8)
+        angle = map_range(steering, -1, 1, -0.7, 0.7)
         self.steering.run(angle)
 
     def run(self, steering: float, throttle: float):
         self.steer(steering)
-        self.throttle.run(throttle)
+        self.throttle.run(throttle * -1)
 
     def run_dps(self, steering: float, dps: int):
         self.steer(steering)
