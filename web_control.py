@@ -4,7 +4,7 @@ import time
 import re
 
 
-from gpiozero import Motor
+# from gpiozero import Motor
 
 from get_robot import get_two_wheel_robot
 

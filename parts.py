@@ -173,7 +173,7 @@ class BrickPiClaw(Claw):
         self.bp.set_motor_power(self.port, -40)
         sleep(0.8)
         self.shutdown()
-        self.closed_position = self.bp.get_motor_encoder(self.port) + 40
+        self.closed_position = self.bp.get_motor_encoder(self.port) + 20
         self.open_position = self.closed_position + 130
         self.open()
 
@@ -329,9 +329,9 @@ class BrickPiOneWheelDriver(Driver):
     def run(self, steering: float, throttle: float):
         adjusted_throttle = throttle * -1
         if steering >= 0.4:
-            self.pivot.max()
+            self.max_pivot()
         elif steering <= -0.4:
-            self.pivot.max()
+            self.max_pivot()
             adjusted_throttle = throttle
         else:
             self.min_pivot()
@@ -339,14 +339,17 @@ class BrickPiOneWheelDriver(Driver):
         self.motor.run(adjusted_throttle)
 
     def min_pivot(self):
-        self.pivot.angle = -40
+        self.pivot.angle = -90
+
+    def max_pivot(self):
+        self.pivot.angle = 80
 
     def run_dps(self, steering, dps: int):
         adjusted_throttle = dps * -1
         if steering >= 0.8:
-            self.pivot.max()
+            self.max_pivot()
         elif steering <= -0.8:
-            self.pivot.max()
+            self.max_pivot()
             adjusted_throttle = dps
         else:
             self.min_pivot()
