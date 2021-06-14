@@ -6,7 +6,7 @@ import re
 
 # from gpiozero import Motor
 
-from get_robot import get_two_wheel_robot
+from get_robot import get_pivot_robot
 
 from helpers import switch, GREEN, CYAN, RESET, default, map_range
 
@@ -18,7 +18,7 @@ requestRegex = re.compile(r"/set/(speed|angle)/(-?\d\d?\d?)")
 speed: int = 0
 angle: int = 0
 
-robot = get_two_wheel_robot()
+robot = get_pivot_robot()
 
 
 def run_angle(robot, angle: int, speed: int):

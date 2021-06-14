@@ -6,7 +6,7 @@ from _thread import start_new_thread
 from time import sleep
 from enum import Enum
 
-from get_robot import get_claw_robot
+from get_robot import get_robot
 from PID import PID
 from helpers import map_range
 
@@ -79,7 +79,7 @@ def get_mask(hsv, color):
         return cv2.inRange(hsv, yellow_lower, yellow_upper)
 
 
-def line_steering(frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
+def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
 
     blurred = cv2.GaussianBlur(frame, (5, 5), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -123,19 +123,26 @@ def line_steering(frame, targetX: int, color: Color = Color.blue) -> Optional[fl
         # Find x-axis centroid using image moments
         cx = int(M['m10']/M['m00'])
 
-        print(cx)
+        print("targetX - cx: " + str(targetX - cx))
 
-        if cx >= 170:
-            return 1
-        elif cx < 170 and cx > 40:
-            return 0
-        elif cx <= 40:
-            return -1
+        # cv2.circle(frame, (cx, 20), 5, (0, 0, 255))
+        # cv2.imwrite("./test.jpg", blurred)
+
+        update = map_range(
+            pid.update(targetX - cx),
+            -85,
+            103,
+            -0.9,
+            0.9
+        ) * -1
+        print("update: " + str(update))
+
+        return update
     else:
         return None
 
 
-is_in_range = (False, False)
+pid = PID(0.8, 0, 0)
 
 mode = (Color.green, Intention.pick_up)
 
@@ -145,18 +152,18 @@ camera.hflip = True
 
 sleep(1)
 
-robot = get_claw_robot()
+robot = get_robot()
 
 vs = PiVideoCapture(camera, size=(192, 108))
 
 try:
     while True:
         frame = vs.read()
-        frame = frame[98:108, 0:]
-        steering = line_steering(frame, 104)
+        frame = frame[38:108, 0:]
+        steering = line_steering(pid, frame, 104)
 
         if steering != None:
-            robot.run(steering, 0.3)
+            robot.run(steering, 0.5)
 
 finally:
     robot.shutdown()

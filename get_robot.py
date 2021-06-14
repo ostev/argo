@@ -10,7 +10,7 @@ def get_robot():
     return robot
 
 
-def get_two_wheel_robot():
+def get_pivot_robot():
     robot = BrickPiOneWheelDriver()
     return robot
 
