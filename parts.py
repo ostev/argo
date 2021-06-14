@@ -116,6 +116,8 @@ class BrickPiSteering(object):
 
 class BrickPiSteerDriver(Driver):
     def __init__(self):
+        super().__init__(self)
+
         self.bp = BrickPi3()
 
         self.steering = BrickPiSteering(self.bp.PORT_C, self.bp)
