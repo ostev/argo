@@ -134,10 +134,10 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
 
 
 class Main(object):
-    async def main(self):
+    def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 185)
+        target = (117, 170)
 
         self.ticks_since_grabbed = 0
 
@@ -164,9 +164,9 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(140, 0.4, 3)
+        self.robot.rotate_to(140, 0.8, 3)
         self.robot.run_dps(0, 750)
-        sleep(3)
+        sleep(3.3)
         self.robot.stop()
 
         while True:
@@ -278,7 +278,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 200)
+                    steering = line_steering(pid2, frame, 180)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
