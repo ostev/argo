@@ -163,7 +163,7 @@ try:
         steering = line_steering(pid, frame, 104)
 
         if steering != None:
-            robot.run(steering, 0.5)
+            robot.run(steering, 0.35)
 
 finally:
     robot.shutdown()
