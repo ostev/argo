@@ -143,10 +143,6 @@ class Main(object):
 
         mode = (Color.green, Intention.pick_up)
 
-        pid = PID(0.7, 0.015, 0)
-
-        pid2 = PID(0.8, 0.02, 0)
-
         camera = PiCamera(resolution=(320, 208))
         camera.vflip = True
         camera.hflip = True
