@@ -76,8 +76,6 @@ class BrickPiDriveMotor(object):
 
 class BrickPiSteering(object):
     def __init__(self, port: int, bp: BrickPi3):
-        super().__init__()
-
         self.bp = bp
 
         self.angle = 0.0
@@ -116,7 +114,7 @@ class BrickPiSteering(object):
 
 class BrickPiSteerDriver(Driver):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
 
         self.bp = BrickPi3()
 
