@@ -341,7 +341,7 @@ class BrickPiOneWheelDriver(Driver):
         self.motor.run(adjusted_throttle)
 
     def min_pivot(self):
-        self.pivot.angle = -90
+        self.pivot.angle = -85
 
     def max_pivot(self):
         self.pivot.angle = 80
