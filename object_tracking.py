@@ -100,18 +100,18 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
         # use it to compute the minimum enclosing circle
         # and centroid
         c = max(contours, key=cv2.contourArea)
-        ((x, y), radius) = cv2.minEnclosingCircle(c)
+#         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         pos = center
 
-        if radius > 10:
-            cv2.circle(frame, (int(x), int(y)),
-                       int(radius), (0, 255, 255), 2)
-            cv2.circle(frame, center, 5, (0, 0, 255), -1)
+#         if radius > 10:
+#             cv2.circle(frame, (int(x), int(y)),
+#                        int(radius), (0, 255, 255), 2)
+#             cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-            cv2.imwrite("./test.jpg", frame)
+#             cv2.imwrite("./test.jpg", frame)
     else:
         return None
 
@@ -189,7 +189,7 @@ class Main(object):
                     # use it to compute the minimum enclosing circle
                     # and centroid
                     c = max(contours, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(c)
+#                     ((x, y), radius) = cv2.minEnclosingCircle(c)
                     M = cv2.moments(c)
                     center = (int(M["m10"] / M["m00"]),
                               int(M["m01"] / M["m00"]))
@@ -200,10 +200,10 @@ class Main(object):
                     self.pos = center
                     print(self.pos)
 
-                    if radius > 10:
-                        cv2.circle(frame, (int(x), int(y)),
-                                   int(radius), (0, 255, 255), 2)
-                        cv2.circle(frame, center, 5, (0, 0, 255), -1)
+#                     if radius > 10:
+#                         cv2.circle(frame, (int(x), int(y)),
+#                                    int(radius), (0, 255, 255), 2)
+#                         cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             print(is_in_range)
 
@@ -344,7 +344,7 @@ class Main(object):
                 #     self.robot.run(update, 0.3)
                 self.robot.run(update, 0.3)
 
-                cv2.imwrite("./test.jpg", frame)
+#                 cv2.imwrite("./test.jpg", frame)
 
 
 if __name__ == "__main__":
