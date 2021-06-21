@@ -2,7 +2,6 @@ from typing import Optional, Tuple
 from PiVideoCapture import PiVideoCapture
 from picamera import PiCamera
 import cv2
-import imutils
 from time import sleep
 from enum import Enum
 
@@ -92,9 +91,8 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
 
     # Find the contours (jargon for "outlines") in the
     # mask and use it to compute the centre of the ball.
-    contours = cv2.findContours(
+    contours, _ = cv2.findContours(
         mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = imutils.grab_contours(contours)
     center = None
 
     if len(contours) > 0:
