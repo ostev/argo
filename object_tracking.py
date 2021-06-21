@@ -91,8 +91,8 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
 
     # Find the contours (jargon for "outlines") in the
     # mask and use it to compute the centre of the ball.
-    contours, _ = cv2.findContours(
-        mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(
+        mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
 
     if len(contours) > 0:
@@ -179,7 +179,7 @@ class Main(object):
 
                 # Find the countours (jargon for "outlines") in the
                 # mask and use it to compute the centre of the ball.
-                contours = cv2.findContours(
+                _, contours, _ = cv2.findContours(
                     mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 contours = imutils.grab_contours(contours)
                 center = None
