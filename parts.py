@@ -365,7 +365,7 @@ class BrickPiOneWheelDriver(Driver):
         self.run_dps(-0.9, throttle)
 
     def turn_right(self, throttle: int):
-        self.run(1, throttle)
+        self.run_dps(1, throttle)
 
     def shutdown(self):
         self.motor.shutdown()

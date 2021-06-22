@@ -104,11 +104,11 @@ class Main(object):
                     elif control == left_control:
                         self.is_left = value
                         if self.is_left:
-                            self.robot.turn_left(self.throttle)
+                            self.robot.turn_left(self.throttle * 70)
                     elif control == right_control:
                         self.is_right = value
                         if self.is_right:
-                            self.robot.turn_right(self.throttle)
+                            self.robot.turn_right(self.throttle * 70)
                         else:
                             self.robot.run(self.steering, self.throttle)
 
@@ -122,9 +122,9 @@ class Main(object):
                     # print("Right speed: " + str(right_speed))
 
                     if self.is_left:
-                        self.robot.turn_left(self.throttle)
+                        self.robot.turn_left(self.throttle * 70)
                     elif self.is_right:
-                        self.robot.turn_right(self.throttle)
+                        self.robot.turn_right(self.throttle * 70)
                     else:
                         self.robot.run(self.steering, self.throttle)
 
