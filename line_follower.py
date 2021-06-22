@@ -154,7 +154,7 @@ sleep(1)
 
 robot = get_robot()
 
-vs = PiVideoCapture(camera, size=(192, 108))
+vs = PiVideoCapture(camera)
 
 try:
     while True:

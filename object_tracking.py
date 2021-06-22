@@ -134,13 +134,13 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (160, 145)
+        target = (96, 75)
 
         self.ticks_since_grabbed = 0
 
         mode = (Color.green, Intention.pick_up)
 
-        camera = PiCamera(resolution=(320, 208))
+        camera = PiCamera(resolution=(192, 108))
         camera.vflip = True
         camera.hflip = True
 
@@ -157,7 +157,7 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(140, 700, 3)
+        self.robot.rotate_to(140, 600, 3)
         self.robot.run_dps(0, 750)
         sleep(3.6)
         self.robot.stop()
@@ -193,7 +193,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > target[0] - 55 and center[0] < target[0] + 55, center[1] > target[1])
+                        center[0] > target[0] - 35 and center[0] < target[0] + 35, center[1] > target[1])
 
                     self.pos = center
                     print(self.pos)
@@ -228,11 +228,11 @@ class Main(object):
                 sleep(2.3)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(90, 700, 2)
+                self.robot.rotate_to(90, 600, 2)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 160)
+                    steering = line_steering(frame, 96)
 
                     if steering != None:
                         self.robot.run_dps(steering, 300)
@@ -260,12 +260,12 @@ class Main(object):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 700, 2)
+                self.robot.rotate_to(180, 600, 2)
                 self.robot.run_dps(0, -700)
                 sleep(1.65)
                 self.robot.stop()
 
-                self.robot.rotate_to(90, 700, 2)
+                self.robot.rotate_to(90, 600, 2)
                 self.robot.run_dps(0, 750)
                 sleep(0.7)
 
@@ -273,7 +273,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 275)
+                    steering = line_steering(frame, 165)
 
                     if steering != None:
                         self.robot.run_dps(steering, 300)
@@ -296,7 +296,7 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(1.38)
-                self.robot.rotate_to(222, 700, 2)
+                self.robot.rotate_to(222, 600, 2)
                 self.robot.claw.open()
 
                 self.robot.run_dps(0, 750)
@@ -309,13 +309,13 @@ class Main(object):
                 self.robot.run_dps(0, -750)
                 sleep(1.6)
 
-                self.robot.rotate_to(90, 700, 2)
+                self.robot.rotate_to(90, 600, 2)
                 self.robot.run_dps(0, 750)
                 sleep(2)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 180, Color.yellow)
+                    steering = line_steering(frame, 104, Color.yellow)
 
                     if steering != None:
                         self.robot.run_dps(steering, 300)
@@ -337,9 +337,9 @@ class Main(object):
             else:
                 self.robot.claw.open()
 
-                if self.pos[0] < target[0] - 50:
+                if self.pos[0] < target[0] - 35:
                     update = -1
-                elif self.pos[0] > target[0] + 50:
+                elif self.pos[0] > target[0] + 35:
                     update = 1
                 else:
                     update = 0

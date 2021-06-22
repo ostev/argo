@@ -5,7 +5,7 @@ from picamera import PiCamera
 
 
 class PiVideoCapture(object):
-    def __init__(self, camera: PiCamera, size=(320, 208)):
+    def __init__(self, camera: PiCamera, size=(192, 108)):
         self.camera = camera
         self.rawCapture = PiRGBArray(self.camera, size=size)
 
