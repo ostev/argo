@@ -285,7 +285,7 @@ class Main(object):
                             self.robot.turn_right(0.3)
                         break
 
-                self.robot.run_dps(0, 300)
+                self.robot.run_dps(0, 600)
                 sleep(0.5)
 
                 self.robot.claw.open_partial()
@@ -344,7 +344,7 @@ class Main(object):
                 else:
                     update = 0
 
-                self.robot.run_dps(update, 300)
+                self.robot.run_dps(update, 250)
 
 #                 cv2.imwrite("./test.jpg", frame)
 
