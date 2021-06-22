@@ -134,7 +134,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (96, 75)
+        target = (96, 80)
 
         self.ticks_since_grabbed = 0
 
@@ -260,7 +260,7 @@ class Main(object):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 600, 2)
+                self.robot.rotate_to(180, 500, 2)
                 self.robot.run_dps(0, -700)
                 sleep(1.65)
                 self.robot.stop()
@@ -281,9 +281,9 @@ class Main(object):
                         frames_since_lost_line += 1
                         if frames_since_lost_line > 2:
                             self.robot.stop()
+                            break
                         else:
-                            self.robot.turn_right(0.3)
-                        break
+                            self.robot.turn_right(300)
 
                 self.robot.run_dps(0, 600)
                 sleep(0.5)
