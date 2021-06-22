@@ -181,7 +181,6 @@ class Main(object):
                 # mask and use it to compute the centre of the ball.
                 _, contours, _ = cv2.findContours(
                     mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                contours = imutils.grab_contours(contours)
                 center = None
 
                 if len(contours) > 0:
