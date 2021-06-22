@@ -78,9 +78,8 @@ def get_mask(hsv, color):
         return cv2.inRange(hsv, yellow_lower, yellow_upper)
 
 
-def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
+def line_steering(frame, targetX: int, color: Color = Color.blue) -> Optional[float]:
     pos = (0, 0)
-    target = (targetX, 0.430)
 
     blurred = cv2.GaussianBlur(frame, (11, 1), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -123,9 +122,9 @@ def line_steering(pid: PID, frame, targetX: int, color: Color = Color.blue) -> O
     #     1
     # ) * -1
 
-    if pos[0] < target[0] - 50:
+    if pos[0] < targetX - 50:
         return -1
-    elif pos[0] > target[0] + 50:
+    elif pos[0] > targetX + 50:
         return 1
     else:
         return 0
@@ -135,7 +134,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 165)
+        target = (160, 143)
 
         self.ticks_since_grabbed = 0
 
@@ -158,9 +157,9 @@ class Main(object):
         self.robot.run_dps(0, -300)
         sleep(1)
         self.robot.stop()
-        self.robot.rotate_to(140, 0.8, 3)
+        self.robot.rotate_to(140, 0.7, 3)
         self.robot.run_dps(0, 750)
-        sleep(3.3)
+        sleep(3.6)
         self.robot.stop()
 
         while True:
@@ -179,7 +178,7 @@ class Main(object):
 
                 # Find the countours (jargon for "outlines") in the
                 # mask and use it to compute the centre of the ball.
-                _, contours, _ = cv2.findContours(
+                _, contours, _ = cv2.findContours(  # `contours, _` on OpenCV 4
                     mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 center = None
 
@@ -194,7 +193,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > 50 and center[0] < 154, center[1] > target[1])
+                        center[0] > target[0] - 55 and center[0] < target[0] + 55, center[1] > target[1])
 
                     self.pos = center
                     print(self.pos)
@@ -229,21 +228,18 @@ class Main(object):
                 sleep(2.3)
                 self.robot.stop()
                 sleep(0.07)
-                self.robot.rotate_to(90, 0.4, 3)
+                self.robot.rotate_to(90, 0.7, 2)
 
-                # while True:
-                #     frame = vs.read()
-                #     steering = line_steering(frame, 0.404)
+                while True:
+                    frame = vs.read()
+                    steering = line_steering(frame, 160)
 
-                #     if steering != None:
-                #         self.robot.run(steering, 0.3)
-                #     else:
-                #         self.robot.stop()
-                #         break
+                    if steering != None:
+                        self.robot.run(steering, 0.3)
+                    else:
+                        self.robot.stop()
+                        break
 
-                self.robot.run_dps(0, 750)
-                sleep(1.6)
-                self.robot.stop()
                 self.robot.claw.open_partial()
 
                 mode = change_mode(mode)
@@ -252,23 +248,28 @@ class Main(object):
 
                 sleep(2)
 
-                self.robot.rotate_to(210, 0.4, 3)
+                self.robot.rotate_to(200, 0.7, 2)
                 self.robot.claw.open()
+
+                self.robot.run_dps(0, 750)
+                sleep(0.8)
 
             elif mode == (Color.red, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 0.4, 3)
+                self.robot.rotate_to(180, 0.7, 2)
                 self.robot.run_dps(0, -700)
                 sleep(2)
                 self.robot.stop()
 
-                self.robot.rotate_to(90, 0.4, 3)
+                self.robot.rotate_to(90, 0.7, 2)
+                self.robot.run_dps(0, 750)
+                sleep(0.7)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 180)
+                    steering = line_steering(frame, 270)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -283,27 +284,32 @@ class Main(object):
                 mode = change_mode(mode)
 
                 self.robot.run_dps(0, -700)
-                sleep(1.52)
-                self.robot.rotate_to(222, 0.4, 3)
+                sleep(1.38)
+                self.robot.rotate_to(225, 0.7, 2)
                 self.robot.claw.open()
 
                 self.robot.run_dps(0, 750)
-                sleep(2)
+                sleep(2.7)
 
             elif mode == (Color.blue, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 0.4, 3)
+                self.robot.run_dps(0, -750)
+                sleep(0.5)
+
+                self.robot.rotate_to(180, 0.7, 2)
                 self.robot.run_dps(0, -600)
                 sleep(1.24)
                 self.robot.stop()
 
-                self.robot.rotate_to(90, 0.4, 3)
+                self.robot.rotate_to(90, 0.7, 2)
+                self.robot.run_dps(0, 750)
+                sleep(3)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 0.412, Color.yellow)
+                    steering = line_steering(frame, 180, Color.yellow)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -316,8 +322,9 @@ class Main(object):
 
                 sleep(0.5)
 
-                self.robot.run_dps(0, -700)
-                sleep(0.7)
+                self.robot.run_dps(0, -750)
+                sleep(1)
+                self.robot.claw.open()
                 self.robot.stop()
 
                 break
