@@ -135,7 +135,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (117, 170)
+        target = (117, 165)
 
         self.ticks_since_grabbed = 0
 
@@ -254,9 +254,6 @@ class Main(object):
 
                 self.robot.rotate_to(210, 0.4, 3)
                 self.robot.claw.open()
-
-                pid.reset()
-                pid2.reset()
 
             elif mode == (Color.red, Intention.deposit):
                 self.robot.stop()
