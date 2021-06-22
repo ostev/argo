@@ -233,7 +233,7 @@ class Main(object):
 
                 # while True:
                 #     frame = vs.read()
-                #     steering = line_steering(pid2, frame, 0.404)
+                #     steering = line_steering(frame, 0.404)
 
                 #     if steering != None:
                 #         self.robot.run(steering, 0.3)
@@ -268,7 +268,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 180)
+                    steering = line_steering(frame, 180)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
@@ -303,7 +303,7 @@ class Main(object):
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(pid2, frame, 0.412, Color.yellow)
+                    steering = line_steering(frame, 0.412, Color.yellow)
 
                     if steering != None:
                         self.robot.run(steering, 0.3)
