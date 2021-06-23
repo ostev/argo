@@ -6,8 +6,7 @@ from helpers import map_range, angle_to_tank, clamp
 from brickpi3 import BrickPi3
 
 from gpiozero.pins.pigpio import PiGPIOFactory
-from gpiozero import AngularServo
-
+from gpiozero import AngularServo, LED
 
 class Claw(object):
     def calibrate(self):
@@ -21,7 +20,6 @@ class Claw(object):
 
     def set_position(self, pos: int):
         pass
-
 
 class Driver(object):
     def __init__(self):
@@ -389,6 +387,12 @@ class BrickPiOneWheelClawDriver(BrickPiOneWheelDriver):
         self.claw.shutdown()
         super().shutdown()
 
+
+class BrickPiOneWheelClawDriverWithLaser(BrickPiOneWheelClawDriver):
+    def __init__(self):
+        super().__init__()
+        self.laser = LED(4)
+        self.laser.off()
 
 class BrickPiOneWheelClawDriverWithGyro(BrickPiOneWheelClawDriver):
     def __init__(self):

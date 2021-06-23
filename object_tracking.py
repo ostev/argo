@@ -256,7 +256,7 @@ class Main(object):
                 self.robot.claw.open()
 
                 self.robot.run_dps(0, 750)
-                sleep(0.25)
+                sleep(1)
 
             elif mode == (Color.red, Intention.deposit):
                 self.robot.stop()
@@ -270,7 +270,7 @@ class Main(object):
                 self.robot.rotate_to(90, 600, 2)
                 self.robot.rotate_to(90, 200)
                 self.robot.run_dps(0, 750)
-                sleep(0.3)
+                sleep(0.9)
 
                 while True:
                     frame = vs.read()
@@ -312,6 +312,8 @@ class Main(object):
                 self.robot.rotate_to(90, 200)
                 self.robot.run_dps(0, 750)
                 sleep(1)
+
+                prev_steering = 0
 
                 while True:
                     frame = vs.read()

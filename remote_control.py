@@ -2,7 +2,7 @@ from time import sleep
 from enum import Enum
 
 from Controller import Controller
-from get_robot import get_robot, get_claw_robot, get_noop_robot
+from get_robot import get_robot, get_claw_robot, get_noop_robot, get_claw_laser_robot
 from Gamepad import EventType
 from helpers import map_range, clamp, RESET, GREEN
 
@@ -14,7 +14,7 @@ recalibrate_control = "START"
 change_mode_to_noop_control = "A"
 change_mode_to_claw_control = "B"
 change_mode_to_steer_control = "Y"
-change_mode_to_claw_partial_control = "X"
+change_mode_to_claw_laser_control = "X"
 
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
@@ -23,13 +23,14 @@ left_control = "LB"
 right_control = "RB"
 
 claw_control = "LT"
+laser_control = "RT"
 
 
 class Mode(Enum):
     noop = 0
     steer = 1
     claw = 2
-    claw_partial = 3
+    claw_laser = 3
 
 
 class Main(object):
@@ -84,31 +85,31 @@ class Main(object):
                             self.mode = Mode.noop
                             self.robot = get_noop_robot()
 
-                    elif control == change_mode_to_claw_partial_control:
-                        if not (self.mode == Mode.claw_partial):
-                            print("Changing to partial-close claw mode...")
-                            self.mode = Mode.claw_partial
-                            self.robot = get_claw_robot()
+                    elif control == change_mode_to_claw_laser_control:
+                        if not (self.mode == Mode.claw_laser):
+                            print("Changing to laser claw mode...")
+                            self.mode = Mode.claw_laser
+                            self.robot = get_claw_laser_robot()
 
+                    elif control == laser_control:
+                        if self.mode == Mode.claw_laser:
+                            if value:
+                                self.robot.laser.on()
+                            else:
+                                self.robot.laser.off()
                     elif control == claw_control:
-                        if self.mode == Mode.claw_partial:
-                            if value:
-                                self.robot.claw.set_position(100)
-                            else:
-                                self.robot.claw.open()
+                        if value:
+                            self.robot.claw.close()
                         else:
-                            if value:
-                                self.robot.claw.close()
-                            else:
-                                self.robot.claw.open()
+                            self.robot.claw.open()
                     elif control == left_control:
                         self.is_left = value
                         if self.is_left:
-                            self.robot.turn_left(self.throttle * 70)
+                            self.robot.turn_left(self.throttle * 75)
                     elif control == right_control:
                         self.is_right = value
                         if self.is_right:
-                            self.robot.turn_right(self.throttle * 70)
+                            self.robot.turn_right(self.throttle * 75)
                         else:
                             self.robot.run(self.steering, self.throttle)
 

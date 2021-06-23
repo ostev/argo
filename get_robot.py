@@ -2,6 +2,7 @@ from parts import BrickPiSteerDriver, \
     BrickPiOneWheelDriver, \
     BrickPiOneWheelClawDriver, \
     BrickPiOneWheelClawDriverWithGyro, \
+    BrickPiOneWheelClawDriverWithLaser, \
     Driver
 
 
@@ -22,6 +23,10 @@ def get_claw_robot():
 
 def get_claw_gyro_robot():
     return BrickPiOneWheelClawDriverWithGyro()
+
+
+def get_claw_laser_robot():
+    return BrickPiOneWheelClawDriverWithLaser()
 
 
 def get_noop_robot():
