@@ -19,11 +19,8 @@ change_mode_to_claw_laser_control = "X"
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
 
-left_control = "LB"
-right_control = "RB"
-
 claw_control = "LT"
-laser_control = "RT"
+laser_control = "RB"
 
 
 class Mode(Enum):
@@ -102,16 +99,6 @@ class Main(object):
                             self.robot.claw.close()
                         else:
                             self.robot.claw.open()
-                    elif control == left_control:
-                        self.is_left = value
-                        if self.is_left:
-                            self.robot.turn_left(self.throttle * 75)
-                    elif control == right_control:
-                        self.is_right = value
-                        if self.is_right:
-                            self.robot.turn_right(self.throttle * 75)
-                        else:
-                            self.robot.run(self.steering, self.throttle)
 
                 elif eventType == EventType.axis:
                     # Joystick changed
