@@ -12,7 +12,7 @@ from helpers import map_range
 
 # The lower and upper boundaries of various colours
 # in HSV colour space
-green_lower = (40, 70, 0)
+green_lower = (42, 70, 0)
 green_upper = (100, 255, 255)
 
 red_lower = (160, 70, 0)
@@ -99,18 +99,18 @@ def line_steering(frame, targetX: int, color: Color = Color.blue) -> Optional[fl
         # use it to compute the minimum enclosing circle
         # and centroid
         c = max(contours, key=cv2.contourArea)
-#         ((x, y), radius) = cv2.minEnclosingCircle(c)
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         pos = center
 
-#         if radius > 10:
-#             cv2.circle(frame, (int(x), int(y)),
-#                        int(radius), (0, 255, 255), 2)
-#             cv2.circle(frame, center, 5, (0, 0, 255), -1)
+        if radius > 10:
+            cv2.circle(frame, (int(x), int(y)),
+                       int(radius), (0, 255, 255), 2)
+            cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-#             cv2.imwrite("./test.jpg", frame)
+            cv2.imwrite("./test.jpg", frame)
     else:
         return None
 
@@ -134,7 +134,7 @@ class Main(object):
     def main(self):
         is_in_range = (False, False)
         self.pos = (0, 0)
-        target = (96, 80)
+        target = (96, 70)
 
         self.ticks_since_grabbed = 0
 
@@ -154,10 +154,10 @@ class Main(object):
         # Allow the camera time to warm up
         sleep(1)
 
-        self.robot.run_dps(0, -300)
-        sleep(1)
+        self.robot.run_dps(0, -600)
+        sleep(0.5)
         self.robot.stop()
-        self.robot.rotate_to(140, 600, 3)
+        self.robot.rotate_to(142, 600, 3)
         self.robot.run_dps(0, 750)
         sleep(3.6)
         self.robot.stop()
@@ -193,7 +193,7 @@ class Main(object):
                               int(M["m01"] / M["m00"]))
 
                     is_in_range = (
-                        center[0] > target[0] - 35 and center[0] < target[0] + 35, center[1] > target[1])
+                        center[0] > target[0] - 42 and center[0] < target[0] + 42, center[1] > target[1])
 
                     self.pos = center
                     print(self.pos)
@@ -224,15 +224,15 @@ class Main(object):
 
                 self.robot.claw.close()
 
-                self.robot.run_dps(0, -600)
-                sleep(2.3)
+                self.robot.run_dps(0, -750)
+                sleep(1.7)
                 self.robot.stop()
                 sleep(0.07)
                 self.robot.rotate_to(90, 600, 2)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 96)
+                    steering = line_steering(frame, 110)
 
                     if steering != None:
                         self.robot.run_dps(steering, 300)
@@ -240,9 +240,10 @@ class Main(object):
                         self.robot.stop()
                         break
 
+                self.robot.run_dps(0, 750)
+                sleep(0.3)
+
                 self.robot.claw.open_partial()
-                self.robot.run_dps(0, 300)
-                sleep(0.5)
 
                 mode = change_mode(mode)
 
@@ -250,40 +251,36 @@ class Main(object):
 
                 sleep(2)
 
-                self.robot.rotate_to(200, 600, 3)
+                self.robot.rotate_to(209, 600, 3)
+                self.robot.rotate_to(209, 200)
                 self.robot.claw.open()
 
                 self.robot.run_dps(0, 750)
-                sleep(0.8)
+                sleep(0.25)
 
             elif mode == (Color.red, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
-                self.robot.rotate_to(180, 500, 2)
-                self.robot.run_dps(0, -700)
-                sleep(1.65)
+                self.robot.rotate_to(180, 650, 2)
+                self.robot.run_dps(0, -750)
+                sleep(2)
                 self.robot.stop()
 
                 self.robot.rotate_to(90, 600, 2)
+                self.robot.rotate_to(90, 200)
                 self.robot.run_dps(0, 750)
-                sleep(0.7)
-
-                frames_since_lost_line = 0
+                sleep(0.3)
 
                 while True:
                     frame = vs.read()
-                    steering = line_steering(frame, 165)
+                    steering = line_steering(frame, 92, Color.yellow)
 
                     if steering != None:
                         self.robot.run_dps(steering, 300)
                     else:
-                        frames_since_lost_line += 1
-                        if frames_since_lost_line > 2:
-                            self.robot.stop()
-                            break
-                        else:
-                            self.robot.turn_right(300)
+                        self.robot.stop()
+                        break
 
                 self.robot.run_dps(0, 600)
                 sleep(0.5)
@@ -296,22 +293,25 @@ class Main(object):
 
                 self.robot.run_dps(0, -700)
                 sleep(1.38)
-                self.robot.rotate_to(222, 600, 2)
+                self.robot.rotate_to(230, 600, 2)
                 self.robot.claw.open()
+                self.robot.rotate_to(230, 200)
 
                 self.robot.run_dps(0, 750)
-                sleep(2)
+                sleep(2.5)
 
             elif mode == (Color.blue, Intention.deposit):
                 self.robot.stop()
                 self.robot.claw.close()
 
+                self.robot.rotate_to(225, 300)
                 self.robot.run_dps(0, -750)
                 sleep(1.6)
 
                 self.robot.rotate_to(90, 600, 2)
+                self.robot.rotate_to(90, 200)
                 self.robot.run_dps(0, 750)
-                sleep(2)
+                sleep(1)
 
                 while True:
                     frame = vs.read()
@@ -337,9 +337,9 @@ class Main(object):
             else:
                 self.robot.claw.open()
 
-                if self.pos[0] < target[0] - 35:
+                if self.pos[0] < target[0] - 42:
                     update = -1
-                elif self.pos[0] > target[0] + 35:
+                elif self.pos[0] > target[0] + 42:
                     update = 1
                 else:
                     update = 0
