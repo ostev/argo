@@ -20,6 +20,10 @@ class Robot(object):
         self.left.stop()
         self.right.stop()
 
+    def shutdown(self):
+        self.left.stop()
+        self.right.stop()
+
     def close(self):
         self.left.close()
         self.right.close()

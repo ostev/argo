@@ -1,61 +1,93 @@
 from time import sleep
+from enum import Enum
 
-from gpiozero import Motor
-
-from Motors import Motors
-from Robot import Robot
 from Controller import Controller
 from get_robot import get_robot
-import Gamepad
-from helpers import translate
+from Gamepad import EventType
+from helpers import map_range, clamp, RESET, GREEN
 
 # Gamepad settings
 gamepadType = Controller
 
 exit_control = "BACK"
+recalibrate_control = "START"
+change_mode_to_noop_control = "A"
+change_mode_to_claw_control = "B"
+change_mode_to_steer_control = "Y"
+change_mode_to_claw_laser_control = "X"
 
 left_speed_control = "LS_Y"
 steering_control = "RS_X"
 
+claw_control = "LT"
+laser_control = "RB"
 
-def main():
-    throttle: float = 0
-    steering: float = 0
 
-    robot = get_robot()
+class Mode(Enum):
+    noop = 0
+    steer = 1
+    claw = 2
+    claw_laser = 3
 
-    # Wait for a connection
-    if not Gamepad.available():
-        print("Please connect your gamepad...")
-        while not Gamepad.available():
-            sleep(1.0)
-    gamepad = gamepadType()
-    print("Gamepad connected")
 
-    # Handle joystick updates one at a time
-    while gamepad.isConnected():
-        # Wait for the next event
-        eventType, control, value = gamepad.getNextEvent()
+class Main(object):
+    def __init__(self):
+        self.throttle: float = 0
+        self.steering: float = 0
 
-        # Determine the type
-        if eventType == "BUTTON":
-            # Button changed
-            if control == exit_control:
-                # Exit button (event on press)
-                if value:
-                    print("=== Exiting ===")
-                    break
+        self.mode = Mode.steer
 
-        elif eventType == "AXIS":
-            # Joystick changed
-            if control == left_speed_control:
-                throttle = value * -1
-            elif control == steering_control:
-                steering = value * -1
-            # print("Left speed: " + str(left_speed))
-            # print("Right speed: " + str(right_speed))
-            robot.steer(translate(steering * -1, -1, 1, -90, 90), throttle)
+        self.is_left = False
+        self.is_right = False
+
+        self.robot = get_robot()
+
+    def main(self):
+        gamepad = Controller()
+
+        while True:
+            # Wait for the next event
+            event = gamepad.get_next_event()
+
+            if event != None:
+                eventType, control, value = event
+                # Determine the type
+                if eventType == EventType.key:
+                    # Button changed
+                    if control == exit_control:
+                        # Exit button (event on press)
+                        if value:
+                            print("\n%sExiting...%s\n" % (GREEN, RESET))
+                            self.robot.shutdown()
+                            break
+
+                    elif control == change_mode_to_steer_control:
+                        if not (self.mode == Mode.steer):
+                            print("Changing to steer mode...")
+                            self.mode = Mode.steer
+                            self.robot = get_robot()
+
+
+                elif eventType == EventType.axis:
+                    print(control)
+                    # Joystick changed
+                    if control == left_speed_control:
+                        self.throttle = value
+                        print(self.throttle)
+                    elif control == steering_control:
+                        self.steering = value
+                        print(self.steering)
+                    # print("Left speed: " + str(left_speed))
+                    # print("Right speed: " + str(right_speed))
+
+                    self.robot.steer(self.steering, self.throttle)
 
 
 if __name__ == "__main__":
-    main()
+    main = Main()
+
+    try:
+        main.main()
+    finally:
+        print("%sExiting...%s" % (GREEN, RESET))
+        main.robot.shutdown()

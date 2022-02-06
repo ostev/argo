@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict, Callable, TypeVar, Union
+from typing import Optional, Any, Dict, Callable, TypeVar, Union, Tuple
 
 T1 = TypeVar("T1")
 T2 = TypeVar("T2")
@@ -9,6 +9,29 @@ CYAN = "\033[0;36m"
 BLUE = "\033[1;34m"
 RESET = "\033[0m"
 
+class Enumeration(object):
+    def __init__(self, names):  # or *names, with no .split()
+        number = 0
+        for line, name in enumerate(names.split('\n')):
+            if name.find(",") >= 0:
+                # strip out the spaces
+                while(name.find(" ") != -1):
+                    name = name[:name.find(" ")] + name[(name.find(" ") + 1):]
+
+                # strip out the commas
+                while(name.find(",") != -1):
+                    name = name[:name.find(",")] + name[(name.find(",") + 1):]
+
+                # if the value was specified
+                if(name.find("=") != -1):
+                    number = int(float(name[(name.find("=") + 1):]))
+                    name = name[:name.find("=")]
+
+                # optionally print to confirm that it's working correctly
+                #print "%40s has a value of %d" % (name, number)
+
+                setattr(self, name, number)
+                number = number + 1
 
 def clamp(value: float, minimum: float, maximum: float):
     return min(maximum, max(value, minimum))
@@ -27,8 +50,10 @@ def switch(
 
 default = lambda _: True
 
+def clamp(n, smallest, largest):
+    return max(smallest, min(n, largest))
 
-def translate(value, leftMin, leftMax, rightMin, rightMax):
+def map_range(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
     rightSpan = rightMax - rightMin
@@ -38,3 +63,20 @@ def translate(value, leftMin, leftMax, rightMin, rightMax):
 
     # Convert the 0-1 range into a value in the right range.
     return rightMin + (valueScaled * rightSpan)
+
+def angle_to_tank(angle: int, throttle: float) -> Tuple[float, float]:
+    if angle == 90:
+        return (throttle, throttle * -1)
+    elif angle == -90:
+        return (throttle * -1, throttle)
+    else:
+        translatedSteering = map_range(angle, -90, 90, -1, 1)
+        left_speed = throttle
+        right_speed = throttle
+
+        if translatedSteering < 0:
+            left_speed *= 1.0 - (-translatedSteering)
+        elif translatedSteering > 0:
+            right_speed *= 1.0 - translatedSteering
+
+        return (round(left_speed, 2), round(right_speed, 2))
